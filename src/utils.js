@@ -24,6 +24,7 @@ const addMatches = async (actualMatches, googleMatches, googleSheet) => {
   }
 
   await googleSheet.addRows(matchesWhichAdd);
+  console.log("Data added in table", 33333333);
 };
 
 const getYesterdayDate = () => {

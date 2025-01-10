@@ -199,6 +199,7 @@ class ParserMatch {
 
   async _initPuppeter() {
     this.browser = await puppeteer?.launch({
+      headless: false,
       args: [
         "--disable-setuid-sandbox",
         "--no-sandbox",
@@ -240,6 +241,7 @@ class ParserMatch {
   parseResMatchesCompleted = async (completedMatches = []) => {
     const arr = [];
     const browser = await puppeteer?.launch({
+      headless: false,
       args: [
         "--disable-setuid-sandbox",
         "--no-sandbox",
