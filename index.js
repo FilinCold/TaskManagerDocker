@@ -28,8 +28,8 @@ app.listen(port, async () => {
   await sheet.loadCells("A1:K10");
 
   // For test========== every run task 5 secs
-  cron.schedule("0 * * * *", async () => {
-    console.log("running a task every hour for test");
+  cron.schedule("*/30 * * * * *", async () => {
+    console.log("running a task every 30 secs for test");
   });
 
   // // проверяет предыдущие записанные матчи изменяет бюджет и удаляет их из таблицы
