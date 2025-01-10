@@ -1,0 +1,22 @@
+{
+  "name": "puppeteer-render",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "express": "^4.21.1",
+    "puppeteer": "^23.10.0",
+    "cors": "^2.8.5",
+    "google-auth-library": "^9.15.0",
+    "google-spreadsheet": "^4.1.4",
+    "node-cron": "^3.0.3"
+  }
+}
