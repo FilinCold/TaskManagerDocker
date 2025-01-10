@@ -19,12 +19,13 @@ const addMatches = async (actualMatches, googleMatches, googleSheet) => {
   const isAddMatches = matchesWhichAdd.length;
 
   if (!isAddMatches) {
-    console.log("isAddMatches========>", 22222222);
+    console.log("Matches have been added to the table");
+
     return;
   }
 
   await googleSheet.addRows(matchesWhichAdd);
-  console.log("Data added in table", 33333333);
+  console.log("Mathes added in the table");
 };
 
 const getYesterdayDate = () => {
