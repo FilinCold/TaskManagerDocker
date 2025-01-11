@@ -34,10 +34,6 @@ app.listen(port, async () => {
   // For test========== every run task 5 secs
   cron.schedule("*/5 * * * * *", async () => {
     console.log("running a task every 30 secs for test");
-    const rows = await sheet.getRows(); // данные из гугл таблицы
-    const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
-    const actualMatches = await parserMatch.matches;
-    addMatches(actualMatches, convertGoogleData, sheet);
   });
 
   // // проверяет предыдущие записанные матчи изменяет бюджет и удаляет их из таблицы
