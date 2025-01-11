@@ -20,6 +20,10 @@ const serviceAccountAuth = new JWT({
 const doc = new GoogleSpreadsheet(ID_TABLE, serviceAccountAuth);
 const port = process.env.PORT || 3001;
 
+app.get("/", (req, res) => {
+  res.send("Parser work").status(200);
+});
+
 app.listen(port, async () => {
   console.log(`Server listening on port ${port}`);
 
@@ -28,8 +32,12 @@ app.listen(port, async () => {
   await sheet.loadCells("A1:K10");
 
   // For test========== every run task 5 secs
-  cron.schedule("*/30 * * * * *", async () => {
+  cron.schedule("*/5 * * * * *", async () => {
     console.log("running a task every 30 secs for test");
+    const rows = await sheet.getRows(); // данные из гугл таблицы
+    const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
+    const actualMatches = await parserMatch.matches;
+    addMatches(actualMatches, convertGoogleData, sheet);
   });
 
   // // проверяет предыдущие записанные матчи изменяет бюджет и удаляет их из таблицы
