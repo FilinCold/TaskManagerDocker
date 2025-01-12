@@ -36,6 +36,9 @@ app.listen(port, async () => {
     const sheet = doc.sheetsByIndex[0];
     await sheet.loadCells("A1:K10");
 
+    cron.schedule("30 * * * *", async () => {
+      console.log("running a task every hour in 30 min for test");
+    });
     // cron.schedule("*/25 * * * * *", async () => {
     //   console.log("running a task every day in 09:00");
 
