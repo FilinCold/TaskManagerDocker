@@ -5,8 +5,10 @@ const {
   SECOND_WINNER,
   SUMM_AMOUNT,
   SUMM_WIN_DEFAULT,
+  COLORS_CELL,
 } = require("../constants");
-
+const { v4 } = require("uuid");
+const uuidv4 = v4;
 class ParserMatch {
   constructor() {
     this.browser = {};
@@ -115,7 +117,7 @@ class ParserMatch {
       const win = winners[i];
       const url = urls[i];
       const match = {
-        id: i,
+        id: uuidv4(),
         time: timeMatch,
         date: dateMatch,
         owner: firstCommand,
@@ -126,10 +128,11 @@ class ParserMatch {
         link: url,
         result: SUMM_WIN_DEFAULT,
       };
+
       arrMatches.push(match);
     }
 
-    return arrMatches.sort((a, b) => (a.date < b.date ? 1 : -1));
+    return arrMatches;
   };
 
   parseMatches = async () => {
@@ -172,7 +175,6 @@ class ParserMatch {
         (a) => a.innerHTML
       );
     });
-
     const urlMatches = this.concatUrl(rawUrlMatches);
     const dateMatchesChunk = this.convertStrWordDate(
       this.makeChunks(rawDateMatches)
@@ -238,6 +240,7 @@ class ParserMatch {
     }, []);
   }
 
+  // получить результат матчей
   parseResMatchesCompleted = async (completedMatches = []) => {
     const arr = [];
     const browser = await puppeteer?.launch({
@@ -254,45 +257,50 @@ class ParserMatch {
           : puppeteer.executablePath(),
     });
 
-    for (let i = 0; i < completedMatches.length; i++) {
-      const page = await browser.newPage();
-      await page?.setViewport({ width: 1080, height: 1024 });
-      await page?.setUserAgent(
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-      );
-      await page?.goto?.(completedMatches[i]?.link, {
-        waitUntil: "domcontentloaded",
-      });
-
-      const rawCheck = await page?.evaluate?.(() => {
-        return Array.from(
-          document.querySelectorAll("div.sc-1bcc6d0c-11 > div"),
-          (div) => div.innerHTML
+    try {
+      for (let i = 0; i < completedMatches.length; i++) {
+        const page = await browser.newPage();
+        await page?.setViewport({ width: 1080, height: 1024 });
+        await page?.setUserAgent(
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         );
-      });
+        await page?.goto?.(completedMatches[i]?.link, {
+          waitUntil: "domcontentloaded",
+        });
 
-      const [firstCommand, secondCommand] = rawCheck;
-      const winCommand =
-        firstCommand > secondCommand ? FIRST_WINNER : SECOND_WINNER;
+        const rawCheck = await page?.evaluate?.(() => {
+          return Array.from(
+            document.querySelectorAll("div.sc-1bcc6d0c-11 > div"),
+            (div) => div.innerHTML
+          );
+        });
 
-      // проверяем результат матча с тем, который прогнозировали
-      // иначе преобразовываем сумму ставки в отрицательное и кладем в массив
-      if (winCommand === completedMatches[i]?.forecast) {
-        const money =
-          Number(completedMatches[i]?.coefficient) *
-          Number(completedMatches[i]?.check);
-        arr.push(money);
+        const [firstCommand, secondCommand] = rawCheck;
+        const winCommand =
+          firstCommand > secondCommand ? FIRST_WINNER : SECOND_WINNER;
+
+        // проверяем результат матча с тем, который прогнозировали
+        // иначе преобразовываем сумму ставки в отрицательное и кладем в массив
+        if (winCommand === completedMatches[i]?.forecast) {
+          const money =
+            Number(completedMatches[i]?.coefficient) *
+            Number(completedMatches[i]?.check);
+          arr.push(money);
+          await page.close();
+
+          continue;
+        }
+
+        const summBet = -Number(completedMatches[i]?.check);
+        arr.push(summBet);
         await page.close();
-
-        continue;
       }
+      await browser.close();
+    } catch (error) {
+      console.log("Error", error);
 
-      const summBet = -Number(completedMatches[i]?.check);
-      arr.push(summBet);
-      await page.close();
+      await browser.close();
     }
-
-    await browser.close();
 
     return arr;
   };

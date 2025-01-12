@@ -4,7 +4,12 @@ const cron = require("node-cron");
 const { ENV } = require("./src/config/env");
 const { JWT } = require("google-auth-library");
 const { GoogleSpreadsheet } = require("google-spreadsheet");
-const { ID_TABLE } = require("./src/constants");
+const {
+  ID_TABLE,
+  COLORS_CELL,
+  COORDS_CHECK_ROW,
+  COORDS_BUDGET_ROW,
+} = require("./src/constants");
 const { parserMatch } = require("./src/service/ParserMatch");
 const { addMatches, filterByYesterdaysDate } = require("./src/utils");
 const app = express();
@@ -26,62 +31,94 @@ app.get("/", (req, res) => {
 
 app.listen(port, async () => {
   console.log(`Server listening on port ${port}`);
+  try {
+    await doc.loadInfo();
+    const sheet = doc.sheetsByIndex[0];
+    await sheet.loadCells("A1:K10");
 
-  await doc.loadInfo();
-  const sheet = doc.sheetsByIndex[0];
-  await sheet.loadCells("A1:K10");
+    // cron.schedule("*/25 * * * * *", async () => {
+    //   console.log("running a task every day in 09:00");
 
-  // For test========== every run task 5 secs
-  cron.schedule("30 * * * *", async () => {
-    console.log("running a task every 30 min for test");
-  });
+    //   // const rows = await sheet.getRows(); // данные из гугл таблицы
+    //   // const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
+    //   // const actualMatches = await parserMatch.matches;
+    //   // addMatches(actualMatches, convertGoogleData, sheet);
 
-  // // проверяет предыдущие записанные матчи изменяет бюджет и удаляет их из таблицы
-  cron.schedule("00 04 * * *", async () => {
-    console.log("running a task every day in 04:00");
+    //   // const check = sheet.getCell(1, COORDS_CHECK_ROW); // получаем бюджет
+    //   // check.backgroundColor = COLORS_CELL.RED;
+    //   // console.log(check?.value, 11111);
+    //   // await sheet.saveUpdatedCells();
+    //   // const rows = await sheet.getRows(); // данные из гугл таблицы
+    //   // const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
+    //   // const yesterdayMatches = filterByYesterdaysDate(convertGoogleData);
+    //   // console.log(yesterdayMatches, 111111);
 
-    const rows = await sheet.getRows(); // данные из гугл таблицы
-    const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
-    const yesterdayMatches = filterByYesterdaysDate(convertGoogleData);
+    //   // if (!yesterdayMatches.length) {
+    //   //   return;
+    //   // }
 
-    if (!yesterdayMatches.length) {
-      return;
-    }
+    //   // const valuesChangeBudget = await parserMatch.parseResMatchesCompleted(
+    //   //   yesterdayMatches
+    //   // );
+    //   // const budget = sheet.getCell(0, 10); // получаем бюджет
+    //   // const budgetValue = budget?.value ? Number(budget?.value) : 0;
 
-    const valuesChangeBudget = await parserMatch.parseResMatchesCompleted(
-      yesterdayMatches
-    );
-    const budget = sheet.getCell(0, 10); // получаем бюджет
-    const budgetValue = budget?.value ? Number(budget?.value) : 0;
+    //   // const newValue = valuesChangeBudget?.reduce((prevVal, curVal) => {
+    //   //   prevVal += curVal;
 
-    const newValue = valuesChangeBudget?.reduce((prevVal, curVal) => {
-      prevVal += curVal;
+    //   //   return prevVal;
+    //   // }, budgetValue);
 
-      return prevVal;
-    }, budgetValue);
+    //   // budget.value = newValue; // change value budget
+    //   // await sheet.saveUpdatedCells();
+    //   // console.log("Budget was changed, completed matches were removed");
 
-    budget.value = newValue; // change value budget
-    yesterdayMatches.map(async (match) => {
-      const id = Number(match?.id);
+    //   // const rows = await sheet.getRows(); // данные из гугл таблицы
+    //   // const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
+    //   // const actualMatches = await parserMatch.matches;
+    //   // addMatches(actualMatches, convertGoogleData, sheet);
+    // });
 
-      if (!id) {
+    // // проверяет предыдущие записанные матчи изменяет бюджет и удаляет их из таблицы
+    cron.schedule("00 06 * * *", async () => {
+      console.log("running a task every day in 09:00 +3 hour by Moscow");
+
+      const rows = await sheet.getRows(); // данные из гугл таблицы
+      const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
+      const yesterdayMatches = filterByYesterdaysDate(convertGoogleData);
+
+      if (!yesterdayMatches.length) {
         return;
       }
 
-      await rows[id].delete();
+      const valuesChangeBudget = await parserMatch.parseResMatchesCompleted(
+        yesterdayMatches
+      );
+
+      const budget = sheet.getCell(0, COORDS_BUDGET_ROW); // получаем бюджет
+      const budgetValue = budget?.value ? Number(budget?.value) : 0;
+
+      const newValue = valuesChangeBudget?.reduce((prevVal, curVal) => {
+        prevVal += curVal;
+
+        return prevVal;
+      }, budgetValue);
+
+      budget.value = newValue; // change value budget
+      await sheet.saveUpdatedCells();
+      console.log("Budget was changed, completed matches were removed");
     });
 
-    await sheet.saveUpdatedCells();
-    console.log("Budget was changed, completed matches were removed");
-  });
+    // Добавляет в таблицу список матчей, если в таблицу уже были добавлены, то не добавляет
+    cron.schedule("00 09 * * *", async () => {
+      console.log("running a task every day in 09:00 +3 hour by Moscow");
 
-  // Добавляет в таблицу список матчей, если в таблицу уже были добавлены, то не добавляет
-  cron.schedule("00 12 * * *", async () => {
-    console.log("running a task every day in 12:00");
-
-    const rows = await sheet.getRows(); // данные из гугл таблицы
-    const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
-    const actualMatches = await parserMatch.matches;
-    addMatches(actualMatches, convertGoogleData, sheet);
-  });
+      const rows = await sheet.getRows(); // данные из гугл таблицы
+      const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
+      const actualMatches = await parserMatch.matches;
+      addMatches(actualMatches, convertGoogleData, sheet);
+    });
+  } catch (error) {
+    console.log(error);
+  }
 });

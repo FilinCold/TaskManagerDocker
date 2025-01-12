@@ -1,7 +1,8 @@
+const { COORDS_CHECK_ROW, COLORS_CELL } = require("./constants");
+
 const getMatchesWhichAdd = (actualMatches, googleMatches) => {
   try {
     const ownersActualMatch = googleMatches.map((item) => item.owner); // change on actualmatches
-
     const filteredMatches = actualMatches.filter((match) => {
       return !ownersActualMatch.includes(match.owner);
     });
@@ -15,6 +16,15 @@ const getMatchesWhichAdd = (actualMatches, googleMatches) => {
 };
 
 const addMatches = async (actualMatches, googleMatches, googleSheet) => {
+  // добавляем в таблицу если в таблице нет записей
+  if (!googleMatches.length) {
+    await googleSheet.addRows(actualMatches);
+    // await addColorColumn(actualMatches, googleSheet);
+    console.log("Mathes added in the table");
+
+    return;
+  }
+
   const matchesWhichAdd = getMatchesWhichAdd(actualMatches, googleMatches);
   const isAddMatches = matchesWhichAdd.length;
 
@@ -25,7 +35,27 @@ const addMatches = async (actualMatches, googleMatches, googleSheet) => {
   }
 
   await googleSheet.addRows(matchesWhichAdd);
+  // await addColorColumn(matchesWhichAdd, googleSheet);
   console.log("Mathes added in the table");
+};
+
+// isFirstAddedInTable проверка нужна, чтобы закрашивать ячейки с самого начала столбца
+// т.к. они еще не были добавлены в таблицу в другом случае получить номер ячейки и закрасить
+const addColorColumn = async (matches, sheet) => {
+  const lenMatches = matches.length;
+
+  if (!lenMatches) {
+    return;
+  }
+
+  // добавляем желтый цвет для ячеек
+  for (let i = 0; i < lenMatches; i++) {
+    let copyIterator = i;
+    const checkColumn = sheet.getCell(++copyIterator, COORDS_CHECK_ROW);
+    checkColumn.backgroundColor = COLORS_CELL.YELLOW;
+  }
+  // обновляем цвет ячеек
+  await sheet.saveUpdatedCells();
 };
 
 const getYesterdayDate = () => {

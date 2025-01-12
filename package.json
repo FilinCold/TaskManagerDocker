@@ -11,12 +11,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.21.1",
-    "puppeteer": "^19.7.2",
-    "cors": "^2.8.5",
     "google-auth-library": "^9.15.0",
     "google-spreadsheet": "^4.1.4",
-    "node-cron": "^3.0.3"
+    "node-cron": "^3.0.3",
+    "puppeteer": "^19.7.2",
+    "uuid": "^11.0.5"
   }
 }
