@@ -36,7 +36,6 @@ app.listen(port, async () => {
     await doc.loadInfo();
     const sheet = doc.sheetsByIndex[0];
     const { lastColumnLetter, rowCount } = sheet;
-
     await sheet.loadCells(`A1:${lastColumnLetter}${rowCount}`);
 
     cron.schedule("30 * * * *", async () => {

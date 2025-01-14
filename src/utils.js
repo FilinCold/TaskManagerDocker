@@ -16,6 +16,9 @@ const getMatchesWhichAdd = (actualMatches, googleMatches) => {
 };
 
 const addMatches = async (actualMatches, googleMatches, googleSheet) => {
+  // для теста условие, чтобы мок данные добавлять и проверять пустую таблицу
+  // if (!googleMatches[0]?.["time"]) {
+
   // добавляем в таблицу если в таблице нет записей
   // проверяем, что хотя бы первый элемент присутствует в таблице
   // если нет, то добавляем весь с 1 строки

@@ -8,6 +8,7 @@ const {
   COLORS_CELL,
   COORDS_CHECK_ROW,
   COORDS_RESULT_ROW,
+  LOWER_COEFF_THRESHOLD,
 } = require("../constants");
 const { v4 } = require("uuid");
 const uuidv4 = v4;
@@ -115,6 +116,12 @@ class ParserMatch {
       const [timeMatch, dateMatch] = dates[i];
       const [firstCommand, secondCommand] = commands[i];
       const [_, secondCoeff] = coeff[i];
+
+      // не добавляем элемент с кэфф меньше 1.3
+      if (secondCoeff < LOWER_COEFF_THRESHOLD) {
+        continue;
+      }
+
       const convertCoeffInDot = String(secondCoeff);
       const win = winners[i];
       const url = urls[i];
