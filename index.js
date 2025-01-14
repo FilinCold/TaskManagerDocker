@@ -39,6 +39,10 @@ app.listen(port, async () => {
 
     await sheet.loadCells(`A1:${lastColumnLetter}${rowCount}`);
 
+    cron.schedule("30 * * * *", async () => {
+      console.log("running a task every hour in 30 min for test");
+    });
+
     // // проверяет предыдущие записанные матчи изменяет бюджет
     cron.schedule("00 06 * * *", async () => {
       console.log("running a task every day in 09:00 +3 hour by Moscow");

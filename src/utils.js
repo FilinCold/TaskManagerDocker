@@ -17,7 +17,6 @@ const getMatchesWhichAdd = (actualMatches, googleMatches) => {
 
 const addMatches = async (actualMatches, googleMatches, googleSheet) => {
   // добавляем в таблицу если в таблице нет записей
-  console.log(googleMatches, 333333);
   // проверяем, что хотя бы первый элемент присутствует в таблице
   // если нет, то добавляем весь с 1 строки
   if (!googleMatches[0]?.get("time")) {
@@ -45,8 +44,6 @@ const addMatches = async (actualMatches, googleMatches, googleSheet) => {
 // т.к. они еще не были добавлены в таблицу в другом случае получить номер ячейки и закрасить
 const addColorColumn = async (matchesGoogle, matchesActual, sheet) => {
   if (!matchesGoogle) {
-    console.log(11111);
-
     // добавляем желтый цвет для ячеек
     for (let i = 0; i < matchesActual.length; i++) {
       let copyIterator = i;
