@@ -43,7 +43,8 @@ app.listen(port, async () => {
       console.log("running a task every hour in 30 min for test");
     });
 
-    // // проверяет предыдущие записанные матчи изменяет бюджет
+    // проверяет предыдущие записанные матчи и изменяет бюджет ровно в 9:00 по МСК.
+    // 06:00 по серверу.
     cron.schedule("00 06 * * *", async () => {
       console.log("running a task every day in 09:00 +3 hour by Moscow");
 
@@ -74,8 +75,9 @@ app.listen(port, async () => {
       console.log("Budget was changed, completed matches were removed");
     });
 
-    // Добавляет в таблицу список матчей, если в таблицу уже были добавлены, то не добавляет
-    cron.schedule("00 09 * * *", async () => {
+    // Добавляет в таблицу список матчей ровно в 14:00 по МСК. 11:00 по серверу.
+    // Если в таблицу уже были добавлены, то не добавляет
+    cron.schedule("00 11 * * *", async () => {
       console.log("running a task every day in 09:00 +3 hour by Moscow");
 
       const rows = await sheet.getRows(); // данные из гугл таблицы

@@ -7,6 +7,7 @@ const {
   SUMM_WIN_DEFAULT,
   COLORS_CELL,
   COORDS_CHECK_ROW,
+  COORDS_RESULT_ROW,
 } = require("../constants");
 const { v4 } = require("uuid");
 const uuidv4 = v4;
@@ -283,7 +284,12 @@ class ParserMatch {
           firstCommand > secondCommand ? FIRST_WINNER : SECOND_WINNER;
         // получаем id элемента из таблицы и меняем цвет ячейки в зависимости от прогноза
         const idGoogleTable = completedMatches[i]?.idGoogleTable ?? 0;
-        const colorResultMatch = sheet.getCell(idGoogleTable, COORDS_CHECK_ROW);
+        // добавляем в ячейку результата кэфф * ставку, если победа, иначе -ставка
+        const colorCellMatchCheck = sheet.getCell(
+          idGoogleTable,
+          COORDS_CHECK_ROW
+        );
+        const resCellMatch = sheet.getCell(idGoogleTable, COORDS_RESULT_ROW);
         // проверяем результат матча с тем, который прогнозировали
         // иначе преобразовываем сумму ставки в отрицательное и кладем в массив
         if (winCommand === completedMatches[i]?.forecast) {
@@ -292,14 +298,15 @@ class ParserMatch {
             Number(completedMatches[i]?.check);
           arr.push(money);
           await page.close();
-
-          colorResultMatch.backgroundColor = COLORS_CELL.GREEN;
+          resCellMatch.value = String(money);
+          colorCellMatchCheck.backgroundColor = COLORS_CELL.GREEN;
 
           continue;
         }
 
-        colorResultMatch.backgroundColor = COLORS_CELL.RED;
+        colorCellMatchCheck.backgroundColor = COLORS_CELL.RED;
         const summBet = -Number(completedMatches[i]?.check);
+        resCellMatch.value = String(summBet);
         arr.push(summBet);
         await page.close();
       }

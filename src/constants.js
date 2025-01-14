@@ -12,6 +12,7 @@ const COLORS_CELL = {
 };
 const COORDS_CHECK_ROW = 6;
 const COORDS_BUDGET_ROW = 10;
+const COORDS_RESULT_ROW = 8;
 
 module.exports = {
   SUMM_AMOUNT,
@@ -23,4 +24,5 @@ module.exports = {
   COLORS_CELL,
   COORDS_CHECK_ROW,
   COORDS_BUDGET_ROW,
+  COORDS_RESULT_ROW,
 };
