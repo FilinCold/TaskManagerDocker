@@ -6,6 +6,7 @@ const {
   SUMM_AMOUNT,
   SUMM_WIN_DEFAULT,
   COLORS_CELL,
+  COORDS_CHECK_ROW,
 } = require("../constants");
 const { v4 } = require("uuid");
 const uuidv4 = v4;
@@ -220,7 +221,8 @@ class ParserMatch {
   }
 
   convertGoogleRows(items = []) {
-    return items.reduce((prevVal, curVal) => {
+    return items.reduce((prevVal, curVal, index) => {
+      const copyIndex = ++index; // Ячейки с данными в гугле начинаются с 1, поэтому прибавляем на +1 сразу;
       const convertGoogleMatch = {
         id: curVal?.get("id"),
         time: curVal?.get("time"),
@@ -232,6 +234,7 @@ class ParserMatch {
         check: curVal?.get("check"),
         link: curVal?.get("link"),
         result: curVal?.get("result"),
+        idGoogleTable: copyIndex,
       };
 
       prevVal.push(convertGoogleMatch);
@@ -241,7 +244,7 @@ class ParserMatch {
   }
 
   // получить результат матчей
-  parseResMatchesCompleted = async (completedMatches = []) => {
+  parseResMatchesCompleted = async (completedMatches = [], sheet) => {
     const arr = [];
     const browser = await puppeteer?.launch({
       headless: true,
@@ -278,7 +281,9 @@ class ParserMatch {
         const [firstCommand, secondCommand] = rawCheck;
         const winCommand =
           firstCommand > secondCommand ? FIRST_WINNER : SECOND_WINNER;
-
+        // получаем id элемента из таблицы и меняем цвет ячейки в зависимости от прогноза
+        const idGoogleTable = completedMatches[i]?.idGoogleTable ?? 0;
+        const colorResultMatch = sheet.getCell(idGoogleTable, COORDS_CHECK_ROW);
         // проверяем результат матча с тем, который прогнозировали
         // иначе преобразовываем сумму ставки в отрицательное и кладем в массив
         if (winCommand === completedMatches[i]?.forecast) {
@@ -288,13 +293,18 @@ class ParserMatch {
           arr.push(money);
           await page.close();
 
+          colorResultMatch.backgroundColor = COLORS_CELL.GREEN;
+
           continue;
         }
 
+        colorResultMatch.backgroundColor = COLORS_CELL.RED;
         const summBet = -Number(completedMatches[i]?.check);
         arr.push(summBet);
         await page.close();
       }
+      // обновляем цвета ячеек
+      await sheet.saveUpdatedCells();
       await browser.close();
     } catch (error) {
       console.log("Error", error);

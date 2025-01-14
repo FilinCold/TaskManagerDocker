@@ -17,9 +17,12 @@ const getMatchesWhichAdd = (actualMatches, googleMatches) => {
 
 const addMatches = async (actualMatches, googleMatches, googleSheet) => {
   // добавляем в таблицу если в таблице нет записей
-  if (!googleMatches.length) {
+  console.log(googleMatches, 333333);
+  // проверяем, что хотя бы первый элемент присутствует в таблице
+  // если нет, то добавляем весь с 1 строки
+  if (!googleMatches[0]?.get("time")) {
     await googleSheet.addRows(actualMatches);
-    // await addColorColumn(actualMatches, googleSheet);
+    await addColorColumn(null, actualMatches, googleSheet);
     console.log("Mathes added in the table");
 
     return;
@@ -35,25 +38,33 @@ const addMatches = async (actualMatches, googleMatches, googleSheet) => {
   }
 
   await googleSheet.addRows(matchesWhichAdd);
-  // await addColorColumn(matchesWhichAdd, googleSheet);
+  await addColorColumn(googleMatches, matchesWhichAdd, googleSheet);
   console.log("Mathes added in the table");
 };
 
-// isFirstAddedInTable проверка нужна, чтобы закрашивать ячейки с самого начала столбца
 // т.к. они еще не были добавлены в таблицу в другом случае получить номер ячейки и закрасить
-const addColorColumn = async (matches, sheet) => {
-  const lenMatches = matches.length;
+const addColorColumn = async (matchesGoogle, matchesActual, sheet) => {
+  if (!matchesGoogle) {
+    console.log(11111);
 
-  if (!lenMatches) {
+    // добавляем желтый цвет для ячеек
+    for (let i = 0; i < matchesActual.length; i++) {
+      let copyIterator = i;
+      const checkColumn = sheet.getCell(++copyIterator, COORDS_CHECK_ROW);
+      checkColumn.backgroundColor = COLORS_CELL.YELLOW;
+    }
+
+    await sheet.saveUpdatedCells();
+
     return;
   }
 
-  // добавляем желтый цвет для ячеек
-  for (let i = 0; i < lenMatches; i++) {
-    let copyIterator = i;
-    const checkColumn = sheet.getCell(++copyIterator, COORDS_CHECK_ROW);
+  let idLastCellGoogle = matchesGoogle.length; // +1 потому что google считает ячейки не с 0
+  for (let i = 0; i < matchesActual.length; i++) {
+    const checkColumn = sheet.getCell(++idLastCellGoogle, COORDS_CHECK_ROW);
     checkColumn.backgroundColor = COLORS_CELL.YELLOW;
   }
+
   // обновляем цвет ячеек
   await sheet.saveUpdatedCells();
 };
