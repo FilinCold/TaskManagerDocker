@@ -18,30 +18,33 @@ const getMatchesWhichAdd = (actualMatches, googleMatches) => {
 const addMatches = async (actualMatches, googleMatches, googleSheet) => {
   // для теста условие, чтобы мок данные добавлять и проверять пустую таблицу
   // if (!googleMatches[0]?.["time"]) {
+  try {
+    // добавляем в таблицу если в таблице нет записей
+    // проверяем, что хотя бы первый элемент присутствует в таблице
+    // если нет, то добавляем весь с 1 строки
+    if (!googleMatches[0]?.time) {
+      await googleSheet.addRows(actualMatches);
+      await addColorColumn(null, actualMatches, googleSheet);
+      console.log("Mathes added in the table");
 
-  // добавляем в таблицу если в таблице нет записей
-  // проверяем, что хотя бы первый элемент присутствует в таблице
-  // если нет, то добавляем весь с 1 строки
-  if (!googleMatches[0]?.get("time")) {
-    await googleSheet.addRows(actualMatches);
-    await addColorColumn(null, actualMatches, googleSheet);
+      return;
+    }
+
+    const matchesWhichAdd = getMatchesWhichAdd(actualMatches, googleMatches);
+    const isAddMatches = matchesWhichAdd.length;
+
+    if (!isAddMatches) {
+      console.log("Matches have been added to the table");
+
+      return;
+    }
+
+    await googleSheet.addRows(matchesWhichAdd);
+    await addColorColumn(googleMatches, matchesWhichAdd, googleSheet);
     console.log("Mathes added in the table");
-
-    return;
+  } catch (error) {
+    console.log(error);
   }
-
-  const matchesWhichAdd = getMatchesWhichAdd(actualMatches, googleMatches);
-  const isAddMatches = matchesWhichAdd.length;
-
-  if (!isAddMatches) {
-    console.log("Matches have been added to the table");
-
-    return;
-  }
-
-  await googleSheet.addRows(matchesWhichAdd);
-  await addColorColumn(googleMatches, matchesWhichAdd, googleSheet);
-  console.log("Mathes added in the table");
 };
 
 // т.к. они еще не были добавлены в таблицу в другом случае получить номер ячейки и закрасить
