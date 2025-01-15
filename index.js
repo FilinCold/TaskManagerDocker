@@ -69,7 +69,7 @@ app.listen(port, async () => {
         return prevVal;
       }, budgetValue);
 
-      budget.value = newValue; // change value budget
+      budget.value = String(newValue); // change value budget
       await sheet.saveUpdatedCells();
       console.log("Budget was changed, completed matches were removed");
     });
