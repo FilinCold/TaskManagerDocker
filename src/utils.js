@@ -103,10 +103,6 @@ const processMatchingChangeBudget = async (numberSheet = 0, doc) => {
   const { lastColumnLetter, rowCount } = sheet;
   await sheet.loadCells(`A1:${lastColumnLetter}${rowCount}`);
 
-  const rows = await sheet.getRows(); // данные из гугл таблицы
-  const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
-  const actualMatches = await parserMatch.matches;
-  addMatches(actualMatches, convertGoogleData, sheet);
   // проверяет предыдущие записанные матчи и изменяет бюджет ровно в 9:00 по МСК.
   // 06:00 по серверу.
   cron.schedule("00 06 * * *", async () => {
