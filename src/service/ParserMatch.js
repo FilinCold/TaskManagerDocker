@@ -327,7 +327,10 @@ class ParserMatch {
           numberSheet === NUMBER_SHEETS.SECOND_SHEET;
         const isChangeForSecondSheetPageGoogle =
           isSecondSheetGoogleTable && bothWinner;
-        const summBet = -Number(completedMatches[i]?.check);
+
+        const summBet = isChangeForSecondSheetPageGoogle
+          ? 0
+          : -Number(completedMatches[i]?.check);
         resCellMatch.value = isChangeForSecondSheetPageGoogle
           ? 0
           : String(summBet);
