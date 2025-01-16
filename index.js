@@ -4,15 +4,8 @@ const cron = require("node-cron");
 const { ENV } = require("./src/config/env");
 const { JWT } = require("google-auth-library");
 const { GoogleSpreadsheet } = require("google-spreadsheet");
-const {
-  ID_TABLE,
-  COLORS_CELL,
-  COORDS_CHECK_ROW,
-  COORDS_BUDGET_ROW,
-} = require("./src/constants");
-const { parserMatch } = require("./src/service/ParserMatch");
-const { addMatches, filterByYesterdaysDate } = require("./src/utils");
-const { MOCK_DATA } = require("./src/mock");
+const { ID_TABLE, NUMBER_SHEETS } = require("./src/constants");
+const { processMatchingChangeBudget } = require("./src/utils");
 const app = express();
 
 const serviceAccountAuth = new JWT({
@@ -32,58 +25,16 @@ app.get("/", (req, res) => {
 
 app.listen(port, async () => {
   console.log(`Server listening on port ${port}`);
+
   try {
     await doc.loadInfo();
-    const sheet = doc.sheetsByIndex[0];
-    const { lastColumnLetter, rowCount } = sheet;
-    await sheet.loadCells(`A1:${lastColumnLetter}${rowCount}`);
 
     cron.schedule("30 * * * *", async () => {
       console.log("running a task every hour in 30 min for test");
     });
 
-    // проверяет предыдущие записанные матчи и изменяет бюджет ровно в 9:00 по МСК.
-    // 06:00 по серверу.
-    cron.schedule("00 06 * * *", async () => {
-      console.log("running a task every day in 09:00 +3 hour by Moscow");
-
-      const rows = await sheet.getRows(); // данные из гугл таблицы
-      const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
-      const yesterdayMatches = filterByYesterdaysDate(convertGoogleData);
-
-      if (!yesterdayMatches.length) {
-        return;
-      }
-
-      const valuesChangeBudget = await parserMatch.parseResMatchesCompleted(
-        yesterdayMatches,
-        sheet
-      );
-
-      const budget = sheet.getCell(0, COORDS_BUDGET_ROW); // получаем бюджет
-      const budgetValue = budget?.value ? Number(budget?.value) : 0;
-
-      const newValue = valuesChangeBudget?.reduce((prevVal, curVal) => {
-        prevVal += curVal;
-
-        return prevVal;
-      }, budgetValue);
-
-      budget.value = String(newValue); // change value budget
-      await sheet.saveUpdatedCells();
-      console.log("Budget was changed, completed matches were removed");
-    });
-
-    // Добавляет в таблицу список матчей ровно в 14:00 по МСК. 11:00 по серверу.
-    // Если в таблицу уже были добавлены, то не добавляет
-    cron.schedule("00 11 * * *", async () => {
-      console.log("running a task every day in 09:00 +3 hour by Moscow");
-
-      const rows = await sheet.getRows(); // данные из гугл таблицы
-      const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
-      const actualMatches = await parserMatch.matches;
-      addMatches(actualMatches, convertGoogleData, sheet);
-    });
+    await processMatchingChangeBudget(NUMBER_SHEETS.FIRST_SHEET, doc);
+    await processMatchingChangeBudget(NUMBER_SHEETS.SECOND_SHEET, doc);
   } catch (error) {
     console.log(error);
   }

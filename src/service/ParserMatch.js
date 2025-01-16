@@ -9,6 +9,8 @@ const {
   COORDS_CHECK_ROW,
   COORDS_RESULT_ROW,
   LOWER_COEFF_THRESHOLD,
+  BOTH_WINNER,
+  NUMBER_SHEETS,
 } = require("../constants");
 const { v4 } = require("uuid");
 const uuidv4 = v4;
@@ -252,7 +254,11 @@ class ParserMatch {
   }
 
   // получить результат матчей
-  parseResMatchesCompleted = async (completedMatches = [], sheet) => {
+  parseResMatchesCompleted = async (
+    completedMatches = [],
+    sheet,
+    numberSheet
+  ) => {
     const arr = [];
     const browser = await puppeteer?.launch({
       headless: true,
@@ -288,7 +294,11 @@ class ParserMatch {
 
         const [firstCommand, secondCommand] = rawCheck;
         const winCommand =
-          firstCommand > secondCommand ? FIRST_WINNER : SECOND_WINNER;
+          firstCommand === secondCommand
+            ? BOTH_WINNER
+            : firstCommand > secondCommand
+            ? FIRST_WINNER
+            : SECOND_WINNER;
         // получаем id элемента из таблицы и меняем цвет ячейки в зависимости от прогноза
         const idGoogleTable = completedMatches[i]?.idGoogleTable ?? 0;
         // добавляем в ячейку результата кэфф * ставку, если победа, иначе -ставка
@@ -311,9 +321,19 @@ class ParserMatch {
           continue;
         }
 
-        colorCellMatchCheck.backgroundColor = COLORS_CELL.RED;
+        // если ничья, то меняем цвет ячейки на серый и оставляем 0, только на странице 2
+        const bothWinner = winCommand === BOTH_WINNER;
+        const isSecondSheetGoogleTable =
+          numberSheet === NUMBER_SHEETS.SECOND_SHEET;
+        const isChangeForSecondSheetPageGoogle =
+          isSecondSheetGoogleTable && bothWinner;
         const summBet = -Number(completedMatches[i]?.check);
-        resCellMatch.value = String(summBet);
+        resCellMatch.value = isChangeForSecondSheetPageGoogle
+          ? 0
+          : String(summBet);
+        colorCellMatchCheck.backgroundColor = isChangeForSecondSheetPageGoogle
+          ? COLORS_CELL.GREY
+          : COLORS_CELL.RED;
         arr.push(summBet);
         await page.close();
       }

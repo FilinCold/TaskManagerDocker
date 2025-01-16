@@ -1,4 +1,10 @@
-const { COORDS_CHECK_ROW, COLORS_CELL } = require("./constants");
+const {
+  COORDS_CHECK_ROW,
+  COLORS_CELL,
+  COORDS_BUDGET_ROW,
+} = require("./constants");
+const cron = require("node-cron");
+const { parserMatch } = require("./service/ParserMatch");
 
 const getMatchesWhichAdd = (actualMatches, googleMatches) => {
   try {
@@ -91,10 +97,66 @@ const filterByYesterdaysDate = (arr) => {
 const sleep = async (timer) =>
   await new Promise((res) => setTimeout(res, timer));
 
+const processMatchingChangeBudget = async (numberSheet = 0, doc) => {
+  const sheet = doc.sheetsByIndex[numberSheet];
+
+  const { lastColumnLetter, rowCount } = sheet;
+  await sheet.loadCells(`A1:${lastColumnLetter}${rowCount}`);
+
+  const rows = await sheet.getRows(); // данные из гугл таблицы
+  const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
+  const actualMatches = await parserMatch.matches;
+  addMatches(actualMatches, convertGoogleData, sheet);
+  // проверяет предыдущие записанные матчи и изменяет бюджет ровно в 9:00 по МСК.
+  // 06:00 по серверу.
+  cron.schedule("00 06 * * *", async () => {
+    console.log("running a task every day in 09:00 +3 hour by Moscow");
+
+    const rows = await sheet.getRows(); // данные из гугл таблицы
+    const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
+    const yesterdayMatches = filterByYesterdaysDate(convertGoogleData);
+
+    if (!yesterdayMatches.length) {
+      return;
+    }
+
+    const valuesChangeBudget = await parserMatch.parseResMatchesCompleted(
+      yesterdayMatches,
+      sheet,
+      numberSheet // нужно для сравнения на каком листе таблицы мы находимся
+    );
+
+    const budget = sheet.getCell(0, COORDS_BUDGET_ROW); // получаем бюджет
+    const budgetValue = budget?.value ? Number(budget?.value) : 0;
+
+    const newValue = valuesChangeBudget?.reduce((prevVal, curVal) => {
+      prevVal += curVal;
+
+      return prevVal;
+    }, budgetValue);
+
+    budget.value = String(newValue); // change value budget
+    await sheet.saveUpdatedCells();
+    console.log("Budget was changed, completed matches were removed");
+  });
+
+  // Добавляет в таблицу список матчей ровно в 14:00 по МСК. 11:00 по серверу.
+  // Если в таблицу уже были добавлены, то не добавляет
+  cron.schedule("00 11 * * *", async () => {
+    console.log("running a task every day in 09:00 +3 hour by Moscow");
+
+    const rows = await sheet.getRows(); // данные из гугл таблицы
+    const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
+    const actualMatches = await parserMatch.matches;
+    addMatches(actualMatches, convertGoogleData, sheet);
+  });
+};
+
 module.exports = {
   sleep,
   getYesterdayDate,
   getMatchesWhichAdd,
   filterByYesterdaysDate,
   addMatches,
+  processMatchingChangeBudget,
 };
