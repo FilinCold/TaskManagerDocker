@@ -279,16 +279,20 @@ class ParserMatch {
           COORDS_CHECK_ROW
         );
         const resCellMatch = sheet.getCell(idGoogleTable, COORDS_RESULT_ROW);
+
         // проверяем результат матча с тем, который прогнозировали
         // иначе преобразовываем сумму ставки в отрицательное и кладем в массив
         if (winCommand === completedMatches[i]?.forecast) {
-          const money =
-            Number(completedMatches[i]?.coefficient) *
-            Number(completedMatches[i]?.check);
-          arr.push(money);
+          const checkDefault = Number(completedMatches[i]?.check);
+          const money = Number(completedMatches[i]?.coefficient) * checkDefault;
+          const res = money - checkDefault;
+          arr.push(res);
           await page.close();
-          resCellMatch.value = String(money);
+          resCellMatch.value = String(res);
           colorCellMatchCheck.backgroundColor = COLORS_CELL.GREEN;
+          await sheet.saveUpdatedCells();
+          await puppeter?.pageClose();
+
           continue;
         }
         // если ничья, то меняем цвет ячейки на серый и оставляем 0, только на странице 2
@@ -307,6 +311,7 @@ class ParserMatch {
           ? COLORS_CELL.GREY
           : COLORS_CELL.RED;
         arr.push(summBet);
+        await sheet.saveUpdatedCells();
 
         await puppeter?.pageClose();
       }
