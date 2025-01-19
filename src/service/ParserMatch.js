@@ -15,10 +15,7 @@ const {
 const { v4 } = require("uuid");
 const uuidv4 = v4;
 class ParserMatch {
-  constructor() {
-    this.browser = {};
-    this.page = {};
-  }
+  constructor() {}
 
   formatDate = (date) => {
     let day = date.getDate().toString().padStart(2, "0");
@@ -91,11 +88,13 @@ class ParserMatch {
   };
 
   clearSomeSymbolRegex = (arr) => {
+    // находит дробные числа из строки вида 12.34
     const regex = /\d+\.\d+/g;
     const numbers = [];
 
     arr.forEach((str) => {
-      const matches = str.match(/\d+\.\d+/g);
+      const matches = str.match(regex);
+
       if (matches) {
         numbers.push(...matches.map(Number));
       }
@@ -143,92 +142,80 @@ class ParserMatch {
       arrMatches.push(match);
     }
 
+    console.log("createCovertMatchesForecast", arrMatches, 8888888888);
+
     return arrMatches;
   };
 
-  parseMatches = async () => {
-    await this._initPuppeter();
-    await this.page?.goto?.(MAIN_URL_FOTTBALL, {
-      waitUntil: "domcontentloaded",
-    });
+  parseMatches = async (puppeter) => {
+    try {
+      const page = await puppeter?.createPage();
+      console.log("puppeter", puppeter, 44444);
 
-    const rawUrlMatches = await this.page?.evaluate?.(() => {
-      return Array.from(
-        document.querySelectorAll("div.sc-c7273f60-6 > a[href]"),
-        (a) => a.getAttribute("href")
-      );
-    });
+      await page?.goto?.(MAIN_URL_FOTTBALL, {
+        waitUntil: "domcontentloaded",
+      });
 
-    const rawDateMatches = await this.page?.evaluate?.(() => {
-      return Array.from(
-        document.querySelectorAll("div.sc-c7273f60-0 > div"),
-        (a) => a.innerHTML
-      );
-    });
+      const rawUrlMatches = await page?.evaluate?.(() => {
+        return Array.from(
+          document.querySelectorAll("div.sc-c7273f60-6 > a[href]"),
+          (a) => a.getAttribute("href")
+        );
+      });
 
-    const rawCommandMatches = await this.page?.evaluate?.(() => {
-      return Array.from(
-        document.querySelectorAll("div.sc-c7273f60-3 > div"),
-        (a) => a.innerHTML
-      );
-    });
+      const rawDateMatches = await page?.evaluate?.(() => {
+        return Array.from(
+          document.querySelectorAll("div.sc-c7273f60-0 > div"),
+          (a) => a.innerHTML
+        );
+      });
 
-    const rawCoeffMatches = await this.page?.evaluate?.(() => {
-      return Array.from(
-        document.querySelectorAll("div.sc-d83ff2c2-0 > span:nth-child(1)"),
-        (a) => a.innerHTML
-      );
-    });
+      const rawCommandMatches = await page?.evaluate?.(() => {
+        return Array.from(
+          document.querySelectorAll("div.sc-c7273f60-3 > div"),
+          (a) => a.innerHTML
+        );
+      });
 
-    const rawWinnerMatches = await this.page?.evaluate?.(() => {
-      return Array.from(
-        document.querySelectorAll("div.sc-d83ff2c2-1 > div:nth-child(1)"),
-        (a) => a.innerHTML
-      );
-    });
-    const urlMatches = this.concatUrl(rawUrlMatches);
-    const dateMatchesChunk = this.convertStrWordDate(
-      this.makeChunks(rawDateMatches)
-    ); // разделяем на чанки по [[1,2]]
-    const dateMatches = this.convertStrWordDate(dateMatchesChunk); // преобразовываем строки слов в даты
-    const commandMatches = this.makeChunks(rawCommandMatches);
-    const coeffMatches = this.clearSomeSymbolRegex(rawCoeffMatches);
+      const rawCoeffMatches = await page?.evaluate?.(() => {
+        return Array.from(
+          document.querySelectorAll("div.sc-d83ff2c2-0 > span:nth-child(1)"),
+          (a) => a.innerHTML
+        );
+      });
 
-    const dataMatches = {
-      urls: urlMatches,
-      dates: dateMatches,
-      commands: commandMatches,
-      coeff: coeffMatches,
-      winners: rawWinnerMatches,
-    };
+      const rawWinnerMatches = await page?.evaluate?.(() => {
+        return Array.from(
+          document.querySelectorAll("div.sc-d83ff2c2-1 > div:nth-child(1)"),
+          (a) => a.innerHTML
+        );
+      });
 
-    await this.browser?.close();
-    return this.createCovertMatchesForecast(dataMatches); // [{ time: '', date: '', }, ...]
+      const urlMatches = this.concatUrl(rawUrlMatches);
+      const dateMatchesChunk = this.convertStrWordDate(
+        this.makeChunks(rawDateMatches)
+      ); // разделяем на чанки по [[1,2]]
+      const dateMatches = this.convertStrWordDate(dateMatchesChunk); // преобразовываем строки слов в даты
+      const commandMatches = this.makeChunks(rawCommandMatches);
+      const coeffMatches = this.clearSomeSymbolRegex(rawCoeffMatches);
+
+      const dataMatches = {
+        urls: urlMatches,
+        dates: dateMatches,
+        commands: commandMatches,
+        coeff: coeffMatches,
+        winners: rawWinnerMatches,
+      };
+
+      console.log("dataMatches", dataMatches, 66666);
+      await puppeter?.pageClose();
+      console.log("puppeter.pageClose", 77777777);
+
+      return this.createCovertMatchesForecast(dataMatches); // [{ time: '', date: '', }, ...]
+    } catch (error) {
+      console.log("Error parse match", error);
+    }
   };
-
-  get matches() {
-    return this.parseMatches();
-  }
-
-  async _initPuppeter() {
-    this.browser = await puppeteer?.launch({
-      headless: true,
-      args: [
-        "--disable-setuid-sandbox",
-        "--no-sandbox",
-        "--single-process",
-        "--no-zygote",
-      ],
-      executablePath:
-        process.env.NODE_ENV === "production"
-          ? process.env.PUPPETEER_EXECUTABLE_PATH
-          : puppeteer.executablePath(),
-    });
-
-    this.page = await this.browser.newPage();
-
-    await this.setConfigBrowser();
-  }
 
   convertGoogleRows(items = []) {
     return items.reduce((prevVal, curVal, index) => {
@@ -257,30 +244,15 @@ class ParserMatch {
   parseResMatchesCompleted = async (
     completedMatches = [],
     sheet,
-    numberSheet
+    numberSheet,
+    puppeter
   ) => {
     const arr = [];
-    const browser = await puppeteer?.launch({
-      headless: true,
-      args: [
-        "--disable-setuid-sandbox",
-        "--no-sandbox",
-        "--single-process",
-        "--no-zygote",
-      ],
-      executablePath:
-        process.env.NODE_ENV === "production"
-          ? process.env.PUPPETEER_EXECUTABLE_PATH
-          : puppeteer.executablePath(),
-    });
 
     try {
       for (let i = 0; i < completedMatches.length; i++) {
-        const page = await browser.newPage();
-        await page?.setViewport({ width: 1080, height: 1024 });
-        await page?.setUserAgent(
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-        );
+        const page = await puppeter.createPage();
+
         await page?.goto?.(completedMatches[i]?.link, {
           waitUntil: "domcontentloaded",
         });
@@ -317,17 +289,14 @@ class ParserMatch {
           await page.close();
           resCellMatch.value = String(money);
           colorCellMatchCheck.backgroundColor = COLORS_CELL.GREEN;
-
           continue;
         }
-
         // если ничья, то меняем цвет ячейки на серый и оставляем 0, только на странице 2
         const bothWinner = winCommand === BOTH_WINNER;
         const isSecondSheetGoogleTable =
           numberSheet === NUMBER_SHEETS.SECOND_SHEET;
         const isChangeForSecondSheetPageGoogle =
           isSecondSheetGoogleTable && bothWinner;
-
         const summBet = isChangeForSecondSheetPageGoogle
           ? 0
           : -Number(completedMatches[i]?.check);
@@ -338,15 +307,14 @@ class ParserMatch {
           ? COLORS_CELL.GREY
           : COLORS_CELL.RED;
         arr.push(summBet);
-        await page.close();
+
+        await page?.pageClose();
       }
+
       // обновляем цвета ячеек
       await sheet.saveUpdatedCells();
-      await browser.close();
     } catch (error) {
       console.log("Error", error);
-
-      await browser.close();
     }
 
     return arr;
