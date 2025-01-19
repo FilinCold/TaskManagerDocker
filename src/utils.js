@@ -91,7 +91,13 @@ const getYesterdayDate = () => {
 
 const filterByYesterdaysDate = (arr) => {
   const yesterday = getYesterdayDate(); // Получаем вчерашнюю дату
-  return arr.filter((item) => item.date === yesterday);
+  return arr.filter((item) => {
+    const dateArr = item.date?.split("."); // преобразуем строку в массив ДДММГГ
+    dateArr.pop(); // и удаляем год
+    const date = dateArr.join(".");
+
+    return date === yesterday;
+  });
 };
 
 const sleep = async (timer) =>

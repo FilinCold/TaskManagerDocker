@@ -308,7 +308,7 @@ class ParserMatch {
           : COLORS_CELL.RED;
         arr.push(summBet);
 
-        await page?.pageClose();
+        await puppeter?.pageClose();
       }
 
       // обновляем цвета ячеек

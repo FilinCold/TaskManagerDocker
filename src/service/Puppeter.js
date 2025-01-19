@@ -50,7 +50,6 @@ class Puppeter {
       console.log("try page disconnect #1", 67676767);
       await this._page?.close();
       this._page = {};
-      console.log("try page disconnect #2", 76767676);
     } catch (error) {
       console.log("Error browser close", error);
     }
