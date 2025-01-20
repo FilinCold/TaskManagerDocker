@@ -287,9 +287,9 @@ class ParserMatch {
           const money = Number(completedMatches[i]?.coefficient) * checkDefault;
           const res = money - checkDefault;
           arr.push(res);
-          await page.close();
           resCellMatch.value = String(res);
           colorCellMatchCheck.backgroundColor = COLORS_CELL.GREEN;
+
           await sheet.saveUpdatedCells();
           await puppeter?.pageClose();
 
@@ -311,8 +311,8 @@ class ParserMatch {
           ? COLORS_CELL.GREY
           : COLORS_CELL.RED;
         arr.push(summBet);
-        await sheet.saveUpdatedCells();
 
+        await sheet.saveUpdatedCells();
         await puppeter?.pageClose();
       }
 

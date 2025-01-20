@@ -29,7 +29,6 @@ app.listen(port, async () => {
 
   try {
     await doc.loadInfo();
-    const puppeter = await Puppeter.init();
 
     cron.schedule("30 * * * *", async () => {
       console.log("running a task every hour in 30 min for test");
@@ -37,13 +36,11 @@ app.listen(port, async () => {
 
     const promise1 = await processMatchingChangeBudget(
       NUMBER_SHEETS.FIRST_SHEET,
-      doc,
-      puppeter
+      doc
     );
     const promise2 = await processMatchingChangeBudget(
       NUMBER_SHEETS.SECOND_SHEET,
-      doc,
-      puppeter
+      doc
     );
 
     Promise.all([promise1, promise2]).catch((e) =>
