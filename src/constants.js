@@ -5,6 +5,9 @@ const ID_TABLE = "1z-rm8dtMZ2TY2yLXkjt4W108trsHqUwX-CSKV-feAgU";
 const FIRST_WINNER = "П1";
 const SECOND_WINNER = "П2";
 const BOTH_WINNER = "П3";
+const FIRST_WINNER_TABLE_3 = "1X";
+const SECOND_WINNER_TABLE_3 = "2X";
+const BOTH_WINNER_TABLE_3 = "3X";
 // почему-то у гугла диапазон цветов от 0 до 1, поэтому нужно делить значение на 255
 const COLORS_CELL = {
   RED: { red: 224 / 255, green: 102 / 255, blue: 102 / 255 },
@@ -19,6 +22,7 @@ const LOWER_COEFF_THRESHOLD = 1.3;
 const NUMBER_SHEETS = {
   FIRST_SHEET: 0,
   SECOND_SHEET: 1,
+  THIRD_SHEET: 2,
 };
 module.exports = {
   SUMM_AMOUNT,
@@ -34,4 +38,7 @@ module.exports = {
   LOWER_COEFF_THRESHOLD,
   NUMBER_SHEETS,
   BOTH_WINNER,
+  FIRST_WINNER_TABLE_3,
+  SECOND_WINNER_TABLE_3,
+  BOTH_WINNER_TABLE_3,
 };

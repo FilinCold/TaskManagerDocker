@@ -133,6 +133,7 @@ const processMatchingChangeBudget = async (numberSheet = 0, doc) => {
         numberSheet, // нужно для сравнения на каком листе таблицы мы находимся
         puppeter
       );
+      console.log("valuesChangeBudget", valuesChangeBudget, 33333333);
 
       const budget = sheet.getCell(0, COORDS_BUDGET_ROW); // получаем бюджет
       const budgetValue = budget?.value ? Number(budget?.value) : 0;
@@ -155,7 +156,10 @@ const processMatchingChangeBudget = async (numberSheet = 0, doc) => {
 
       const rows = await sheet.getRows(); // данные из гугл таблицы
       const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
-      const actualMatches = await parserMatch.parseMatches(puppeter);
+      const actualMatches = await parserMatch.parseMatches(
+        puppeter,
+        numberSheet
+      );
       addMatches(actualMatches, convertGoogleData, sheet);
     });
   } catch (error) {

@@ -11,6 +11,9 @@ const {
   LOWER_COEFF_THRESHOLD,
   BOTH_WINNER,
   NUMBER_SHEETS,
+  BOTH_WINNER_TABLE_3,
+  FIRST_WINNER_TABLE_3,
+  SECOND_WINNER_TABLE_3,
 } = require("../constants");
 const { v4 } = require("uuid");
 const uuidv4 = v4;
@@ -103,7 +106,22 @@ class ParserMatch {
     return this.makeChunks(numbers, 2);
   };
 
-  createCovertMatchesForecast = (dataMatches) => {
+  getCoeffForDetailInfo = (arr) => {
+    const regex = /<(span|div)[^>]*>([^<]+)<\/\1>([\d.,]+)/i;
+    const numbers = [];
+
+    arr.forEach((str) => {
+      const matches = str.match(regex);
+
+      if (matches) {
+        numbers.push([matches[2], matches[3]]);
+      }
+    });
+
+    return numbers.filter((elem, index) => (index !== 1 ? elem : false));
+  };
+
+  createCovertMatchesForecast = (dataMatches, isThirdGoogleTable = false) => {
     const {
       urls = [],
       dates = [],
@@ -119,7 +137,7 @@ class ParserMatch {
       const [_, secondCoeff] = coeff[i];
 
       // не добавляем элемент с кэфф меньше 1.3
-      if (secondCoeff < LOWER_COEFF_THRESHOLD) {
+      if (secondCoeff < LOWER_COEFF_THRESHOLD && !isThirdGoogleTable) {
         continue;
       }
 
@@ -142,15 +160,12 @@ class ParserMatch {
       arrMatches.push(match);
     }
 
-    console.log("createCovertMatchesForecast", arrMatches, 8888888888);
-
     return arrMatches;
   };
 
-  parseMatches = async (puppeter) => {
+  parseMatches = async (puppeter, numberSheet) => {
     try {
       const page = await puppeter?.createPage();
-      console.log("puppeter", puppeter, 44444);
 
       await page?.goto?.(MAIN_URL_FOTTBALL, {
         waitUntil: "domcontentloaded",
@@ -199,23 +214,89 @@ class ParserMatch {
       const commandMatches = this.makeChunks(rawCommandMatches);
       const coeffMatches = this.clearSomeSymbolRegex(rawCoeffMatches);
 
-      const dataMatches = {
+      await puppeter?.pageClose();
+      console.log("puppeter.pageClose", 77777777);
+      const defaultData = {
         urls: urlMatches,
-        dates: dateMatches,
-        commands: commandMatches,
         coeff: coeffMatches,
         winners: rawWinnerMatches,
       };
 
-      console.log("dataMatches", dataMatches, 66666);
-      await puppeter?.pageClose();
-      console.log("puppeter.pageClose", 77777777);
+      let dataForListGoogleThird = defaultData;
+      const isThirdGoogleTable = numberSheet === NUMBER_SHEETS.THIRD_SHEET;
 
-      return this.createCovertMatchesForecast(dataMatches); // [{ time: '', date: '', }, ...]
+      // изменяет данные coeff, winners в зависимости от 3 листа таблицы
+      if (isThirdGoogleTable) {
+        dataForListGoogleThird = await this.convertDataThirdListGoogle(
+          puppeter,
+          defaultData
+        );
+      }
+
+      const dataMatches = {
+        dates: dateMatches,
+        commands: commandMatches,
+        ...dataForListGoogleThird,
+      };
+
+      // если 3 таблица, то пушим значения низких кэфов
+      return this.createCovertMatchesForecast(dataMatches, isThirdGoogleTable); // [{ time: '', date: '', }, ...]
     } catch (error) {
       console.log("Error parse match", error);
     }
   };
+
+  async convertDataThirdListGoogle(
+    puppeter,
+    data = { urls: [], coeff: [], winners: [] } // default value
+  ) {
+    const { urls, coeff, winners } = data;
+
+    try {
+      for (let i = 0; i < urls.length; i++) {
+        const page = await puppeter.createPage();
+
+        await page?.goto?.(urls[i], {
+          waitUntil: "domcontentloaded",
+        });
+
+        await page.click("div.sc-8f1c2eee-4 > button:first-child");
+
+        const rawCoeff = await page?.evaluate?.(() => {
+          // '<span class="sc-51b5fb96-2 bmbyaV">1X</span>1.043' находит строку с кэф.
+          return Array.from(
+            // обращаемся к значению 1,
+            // чтобы из массива всех статистик получить нужный нам
+            document
+              .querySelectorAll("div.sc-51b5fb96-24")[1]
+              .querySelectorAll("div.sc-51b5fb96-1.iUZZTC"),
+            (div) => div.innerHTML
+          );
+        });
+
+        const [firstCoeffWin, secondCoeffWin] =
+          this.getCoeffForDetailInfo(rawCoeff);
+        const [firstWinSymbol, firstCoeff] = firstCoeffWin;
+        const [secondWinSymbol, secondCoeff] = secondCoeffWin;
+
+        const isFirstWinner = winners[i] === FIRST_WINNER;
+        // переопределяем значение победителя на x1 || x2
+        winners[i] = isFirstWinner ? firstWinSymbol : secondWinSymbol;
+        // удаляем последний элемент, чтобы поместить в массив обновленный кэфф
+        coeff[i].pop();
+        const elementCoeff = isFirstWinner
+          ? Number(firstCoeff)
+          : Number(secondCoeff);
+        coeff[i].push(elementCoeff);
+
+        await puppeter.pageClose();
+      }
+
+      return { urls, coeff, winners };
+    } catch (error) {
+      console.log("Error parse link", error);
+    }
+  }
 
   convertGoogleRows(items = []) {
     return items.reduce((prevVal, curVal, index) => {
@@ -264,65 +345,127 @@ class ParserMatch {
           );
         });
 
-        const [firstCommand, secondCommand] = rawCheck;
-        const winCommand =
-          firstCommand === secondCommand
-            ? BOTH_WINNER
-            : firstCommand > secondCommand
-            ? FIRST_WINNER
-            : SECOND_WINNER;
-        // получаем id элемента из таблицы и меняем цвет ячейки в зависимости от прогноза
-        const idGoogleTable = completedMatches[i]?.idGoogleTable ?? 0;
-        // добавляем в ячейку результата кэфф * ставку, если победа, иначе -ставка
-        const colorCellMatchCheck = sheet.getCell(
-          idGoogleTable,
-          COORDS_CHECK_ROW
+        const res = await this.matchesCompletedDependencyListGoogleTable(
+          completedMatches[i],
+          rawCheck,
+          numberSheet,
+          sheet,
+          puppeter
         );
-        const resCellMatch = sheet.getCell(idGoogleTable, COORDS_RESULT_ROW);
 
-        // проверяем результат матча с тем, который прогнозировали
-        // иначе преобразовываем сумму ставки в отрицательное и кладем в массив
-        if (winCommand === completedMatches[i]?.forecast) {
-          const checkDefault = Number(completedMatches[i]?.check);
-          const money = Number(completedMatches[i]?.coefficient) * checkDefault;
-          const res = money - checkDefault;
-          arr.push(res);
-          resCellMatch.value = String(res);
-          colorCellMatchCheck.backgroundColor = COLORS_CELL.GREEN;
-
-          await sheet.saveUpdatedCells();
-          await puppeter?.pageClose();
-
-          continue;
-        }
-        // если ничья, то меняем цвет ячейки на серый и оставляем 0, только на странице 2
-        const bothWinner = winCommand === BOTH_WINNER;
-        const isSecondSheetGoogleTable =
-          numberSheet === NUMBER_SHEETS.SECOND_SHEET;
-        const isChangeForSecondSheetPageGoogle =
-          isSecondSheetGoogleTable && bothWinner;
-        const summBet = isChangeForSecondSheetPageGoogle
-          ? 0
-          : -Number(completedMatches[i]?.check);
-        resCellMatch.value = isChangeForSecondSheetPageGoogle
-          ? 0
-          : String(summBet);
-        colorCellMatchCheck.backgroundColor = isChangeForSecondSheetPageGoogle
-          ? COLORS_CELL.GREY
-          : COLORS_CELL.RED;
-        arr.push(summBet);
-
-        await sheet.saveUpdatedCells();
-        await puppeter?.pageClose();
+        arr.push(res);
       }
 
       // обновляем цвета ячеек
       await sheet.saveUpdatedCells();
+
+      return arr;
     } catch (error) {
       console.log("Error", error);
     }
 
     return arr;
+  };
+
+  matchesCompletedDependencyListGoogleTable = async (
+    completedMatch,
+    rawCheck,
+    numberSheet,
+    sheet,
+    puppeter
+  ) => {
+    const [firstCommand, secondCommand] = rawCheck;
+    let winCommand = "";
+    // получаем id элемента из таблицы и меняем цвет ячейки в зависимости от прогноза
+    const idGoogleTable = completedMatch?.idGoogleTable ?? 0;
+    // добавляем в ячейку результата кэфф * ставку, если победа, иначе -ставка
+    const colorCellMatchCheck = sheet.getCell(idGoogleTable, COORDS_CHECK_ROW);
+    const resCellMatch = sheet.getCell(idGoogleTable, COORDS_RESULT_ROW);
+
+    const checkDefault = Number(completedMatch?.check);
+    const money = Number(completedMatch?.coefficient) * checkDefault;
+    const resMoneyWin = Number((money - checkDefault).toFixed(1));
+
+    colorCellMatchCheck.backgroundColor = COLORS_CELL.RED;
+    resCellMatch.value = String(-Number(completedMatch?.check));
+    let result = -Number(completedMatch?.check);
+
+    const isBothWinner = firstCommand === secondCommand;
+    const isFirstWinner = firstCommand > secondCommand;
+    const isSecondWinner = firstCommand < secondCommand;
+
+    // проверяем, что первый лист
+    if (numberSheet === NUMBER_SHEETS.FIRST_SHEET) {
+      if (isBothWinner) {
+        winCommand = BOTH_WINNER;
+        colorCellMatchCheck.backgroundColor = COLORS_CELL.RED;
+        resCellMatch.value = String(-Number(completedMatch?.check));
+        result = -Number(completedMatch?.check);
+      }
+
+      if (isFirstWinner) {
+        winCommand = FIRST_WINNER;
+      }
+
+      if (isSecondWinner) {
+        winCommand = SECOND_WINNER;
+      }
+
+      if (winCommand === completedMatch?.forecast) {
+        colorCellMatchCheck.backgroundColor = COLORS_CELL.GREEN;
+        resCellMatch.value = String(resMoneyWin);
+        result = resMoneyWin;
+      }
+    }
+
+    if (numberSheet === NUMBER_SHEETS.SECOND_SHEET) {
+      if (isBothWinner) {
+        winCommand = BOTH_WINNER;
+        colorCellMatchCheck.backgroundColor = COLORS_CELL.GREY;
+        resCellMatch.value = String(0);
+        result = 0;
+      }
+
+      if (isFirstWinner) {
+        winCommand = FIRST_WINNER;
+      }
+
+      if (isSecondWinner) {
+        winCommand = SECOND_WINNER;
+      }
+
+      if (winCommand === completedMatch?.forecast) {
+        colorCellMatchCheck.backgroundColor = COLORS_CELL.GREEN;
+        resCellMatch.value = String(resMoneyWin);
+        result = resMoneyWin;
+      }
+    }
+
+    if (numberSheet === NUMBER_SHEETS.THIRD_SHEET) {
+      if (isBothWinner) {
+        winCommand = BOTH_WINNER_TABLE_3;
+        colorCellMatchCheck.backgroundColor = COLORS_CELL.GREEN;
+      }
+
+      if (isFirstWinner) {
+        winCommand = FIRST_WINNER_TABLE_3;
+      }
+
+      if (isSecondWinner) {
+        winCommand = SECOND_WINNER_TABLE_3;
+      }
+
+      if (winCommand === completedMatch?.forecast || isBothWinner) {
+        colorCellMatchCheck.backgroundColor = COLORS_CELL.GREEN;
+        resCellMatch.value = String(resMoneyWin);
+        result = resMoneyWin;
+      }
+    }
+
+    await sheet.saveUpdatedCells();
+    await puppeter?.pageClose();
+
+    return result;
   };
 }
 

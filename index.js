@@ -43,7 +43,12 @@ app.listen(port, async () => {
       doc
     );
 
-    Promise.all([promise1, promise2]).catch((e) =>
+    const promise3 = await processMatchingChangeBudget(
+      NUMBER_SHEETS.THIRD_SHEET,
+      doc
+    );
+
+    Promise.all([promise1, promise2, promise3]).catch((e) =>
       console.log("Which promise with error", e)
     );
   } catch (error) {

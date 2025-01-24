@@ -47,7 +47,6 @@ class Puppeter {
 
   async pageClose() {
     try {
-      console.log("try page disconnect #1", 67676767);
       await this._page?.close();
       this._page = null;
     } catch (error) {
