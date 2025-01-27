@@ -214,8 +214,6 @@ class ParserMatch {
       const commandMatches = this.makeChunks(rawCommandMatches);
       const coeffMatches = this.clearSomeSymbolRegex(rawCoeffMatches);
 
-      await puppeter?.pageClose();
-      console.log("puppeter.pageClose", 77777777);
       const defaultData = {
         urls: urlMatches,
         coeff: coeffMatches,
@@ -238,6 +236,9 @@ class ParserMatch {
         commands: commandMatches,
         ...dataForListGoogleThird,
       };
+
+      await puppeter?.pageClose();
+      console.log("puppeter.pageClose", 77777777);
 
       // если 3 таблица, то пушим значения низких кэфов
       return this.createCovertMatchesForecast(dataMatches, isThirdGoogleTable); // [{ time: '', date: '', }, ...]
