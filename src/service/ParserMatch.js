@@ -338,6 +338,8 @@ class ParserMatch {
           waitUntil: "domcontentloaded",
         });
 
+        await this.sleep(500);
+
         const rawCheck = await page?.evaluate?.(() => {
           return Array.from(
             document.querySelectorAll("div.sc-1bcc6d0c-11 > div"),
@@ -355,9 +357,6 @@ class ParserMatch {
 
         arr.push(res);
       }
-
-      // обновляем цвета ячеек
-      await sheet.saveUpdatedCells();
 
       return arr;
     } catch (error) {
@@ -467,6 +466,8 @@ class ParserMatch {
 
     return result;
   };
+
+  sleep = async (timer) => await new Promise((res) => setTimeout(res, timer));
 }
 
 const parserMatch = new ParserMatch();
