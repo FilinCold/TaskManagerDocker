@@ -158,6 +158,7 @@ const processMatchingChangeBudget = async (numberSheet = 0, doc, puppeter) => {
         puppeter,
         numberSheet
       );
+      await puppeter?.pageClose();
       addMatches(actualMatches, convertGoogleData, sheet);
     });
   } catch (error) {

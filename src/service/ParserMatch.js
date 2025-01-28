@@ -237,9 +237,6 @@ class ParserMatch {
         ...dataForListGoogleThird,
       };
 
-      await puppeter?.pageClose();
-      console.log("puppeter.pageClose", 77777777);
-
       // если 3 таблица, то пушим значения низких кэфов
       return this.createCovertMatchesForecast(dataMatches, isThirdGoogleTable); // [{ time: '', date: '', }, ...]
     } catch (error) {
@@ -253,6 +250,8 @@ class ParserMatch {
   ) {
     const { urls, coeff, winners } = data;
 
+    await puppeter?.pageClose();
+
     try {
       for (let i = 0; i < urls.length; i++) {
         const page = await puppeter.createPage();
@@ -261,16 +260,40 @@ class ParserMatch {
           waitUntil: "domcontentloaded",
         });
 
-        await page.click("div.sc-8f1c2eee-4 > button:first-child");
+        await this.sleep(1000);
 
+        const banner = await page?.evaluate?.(() => {
+          const closeElement = document?.querySelectorAll("div.sc-ea9fa2a2-2");
+
+          if (closeElement.length) {
+            return Array.from(
+              document?.querySelectorAll("div.sc-ea9fa2a2-2"),
+              (div) => "div.sc-ea9fa2a2-2"
+            );
+          }
+
+          return "";
+        });
+
+        console.log("banner open ====>", banner, 556565656);
+
+        // проверяем, если появился баннер на странице
+        if (banner?.length) {
+          await page?.click(banner[0]);
+        }
+
+        await page.waitForSelector("div.sc-8f1c2eee-4 > button:first-child");
+        await page?.click("div.sc-8f1c2eee-4 > button:first-child");
+
+        await page.waitForSelector("div.sc-51b5fb96-24");
         const rawCoeff = await page?.evaluate?.(() => {
           // '<span class="sc-51b5fb96-2 bmbyaV">1X</span>1.043' находит строку с кэф.
           return Array.from(
             // обращаемся к значению 1,
             // чтобы из массива всех статистик получить нужный нам
             document
-              .querySelectorAll("div.sc-51b5fb96-24")[1]
-              .querySelectorAll("div.sc-51b5fb96-1.iUZZTC"),
+              ?.querySelectorAll("div.sc-51b5fb96-24")[1]
+              ?.querySelectorAll("div.sc-51b5fb96-1.iUZZTC"),
             (div) => div.innerHTML
           );
         });
@@ -339,7 +362,7 @@ class ParserMatch {
           waitUntil: "domcontentloaded",
         });
 
-        await this.sleep(500);
+        await this.sleep(1000);
 
         const rawCheck = await page?.evaluate?.(() => {
           return Array.from(
