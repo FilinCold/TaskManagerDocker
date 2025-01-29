@@ -135,6 +135,7 @@ class ParserMatch {
       const [timeMatch, dateMatch] = dates[i];
       const [firstCommand, secondCommand] = commands[i];
       const [_, secondCoeff] = coeff[i];
+      console.log(coeff, 43343434);
 
       // не добавляем элемент с кэфф меньше 1.3
       if (secondCoeff < LOWER_COEFF_THRESHOLD && !isThirdGoogleTable) {
@@ -237,7 +238,7 @@ class ParserMatch {
         ...dataForListGoogleThird,
       };
 
-      // если 3 таблица, то пушим значения низких кэфов
+      // isThirdGoogleTable - если 3 таблица, то пушим значения низких кэфов
       return this.createCovertMatchesForecast(dataMatches, isThirdGoogleTable); // [{ time: '', date: '', }, ...]
     } catch (error) {
       console.log("Error parse match", error);
