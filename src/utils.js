@@ -104,8 +104,9 @@ const filterByYesterdaysDate = (arr) => {
 const sleep = async (timer) =>
   await new Promise((res) => setTimeout(res, timer));
 
-const processMatchingChangeBudget = async (numberSheet = 0, doc, puppeter) => {
+const processMatchingChangeBudget = async (numberSheet = 0, doc) => {
   try {
+    const puppeter = await Puppeter.init();
     const sheet = doc.sheetsByIndex[numberSheet];
     console.log(111111);
     const { lastColumnLetter, rowCount } = sheet;
