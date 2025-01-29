@@ -34,14 +34,18 @@ app.listen(port, async () => {
       console.log("running a task every hour in 30 min for test");
     });
 
+    const puppeter = await Puppeter.init();
+
     const promise2 = await processMatchingChangeBudget(
       NUMBER_SHEETS.SECOND_SHEET,
-      doc
+      doc,
+      puppeter
     );
 
     const promise3 = await processMatchingChangeBudget(
       NUMBER_SHEETS.THIRD_SHEET,
-      doc
+      doc,
+      puppeter
     );
 
     Promise.all([promise2, promise3]).catch((e) =>
