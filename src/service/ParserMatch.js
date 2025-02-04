@@ -1,4 +1,3 @@
-const puppeteer = require("puppeteer");
 const {
   FIRST_WINNER,
   MAIN_URL_FOTTBALL,
@@ -172,6 +171,9 @@ class ParserMatch {
         waitUntil: "domcontentloaded",
       });
 
+      // убираем появляющиеся баннеры добавляя в localStorage ключи
+      await this.setLocalStorageForHideBanners(page);
+
       const rawUrlMatches = await page?.evaluate?.(() => {
         return Array.from(
           document.querySelectorAll("div.sc-c7273f60-6 > a[href]"),
@@ -251,8 +253,6 @@ class ParserMatch {
   ) {
     const { urls, coeff, winners } = data;
 
-    await puppeter?.pageClose();
-
     try {
       for (let i = 0; i < urls.length; i++) {
         const page = await puppeter.createPage();
@@ -263,28 +263,14 @@ class ParserMatch {
 
         await this.sleep(1000);
 
-        const banner = await page?.evaluate?.(() => {
-          const closeElement = document?.querySelectorAll("div.sc-ea9fa2a2-2");
+        // ищем кнопку Сделать прогноз
+        const [button] = await page.$x(
+          "//button[contains(., 'Сделать прогноз')]"
+        );
 
-          if (closeElement.length) {
-            return Array.from(
-              document?.querySelectorAll("div.sc-ea9fa2a2-2"),
-              (div) => "div.sc-ea9fa2a2-2"
-            );
-          }
-
-          return "";
-        });
-
-        console.log("banner open ====>", banner, 556565656);
-
-        // проверяем, если появился баннер на странице
-        if (banner?.length) {
-          await page?.click(banner[0]);
+        if (button) {
+          await button.click();
         }
-
-        await page.waitForSelector("div.sc-8f1c2eee-4 > button:first-child");
-        await page?.click("div.sc-8f1c2eee-4 > button:first-child");
 
         await page.waitForSelector("div.sc-51b5fb96-24");
         const rawCoeff = await page?.evaluate?.(() => {
@@ -314,6 +300,7 @@ class ParserMatch {
           : Number(secondCoeff);
         coeff[i].push(elementCoeff);
 
+        console.log("Parse page complete ======>", urls[i]);
         await puppeter.pageClose();
       }
 
@@ -353,6 +340,15 @@ class ParserMatch {
     numberSheet,
     puppeter
   ) => {
+    // Заходим на основную страницу и добавляем в localStorage необходимые ключи
+    // для скрытия банеров
+    const pageMainUrl = await puppeter.createPage();
+    await pageMainUrl?.goto?.(MAIN_URL_FOTTBALL, {
+      waitUntil: "domcontentloaded",
+    });
+    // убираем появляющиеся баннеры добавляя в localStorage ключи
+    await this.setLocalStorageForHideBanners(pageMainUrl);
+
     const arr = [];
 
     try {
@@ -380,12 +376,19 @@ class ParserMatch {
           puppeter
         );
 
+        console.log(
+          "Parse page complete ======>",
+          completedMatches[i].link,
+          "Res====>",
+          res
+        );
+
         arr.push(res);
       }
 
       return arr;
     } catch (error) {
-      console.log("Error", error);
+      console.log("Error parse res matches", error);
     }
 
     return arr;
@@ -490,6 +493,18 @@ class ParserMatch {
     await puppeter?.pageClose();
 
     return result;
+  };
+
+  // убираем появляющиеся баннеры добавляя в localStorage ключи
+  setLocalStorageForHideBanners = async (page) => {
+    await page?.evaluate(() => {
+      if (window?.localStorage) {
+        localStorage.setItem("_fs.nb_hideFullScreenBanner", String(Date.now()));
+        localStorage.setItem("_fs.nb_countFullScreenBanner", String(0));
+        localStorage.setItem("_tp.nb-tph", String(Date.now()));
+        localStorage.setItem("_tp.nb-tch", String(1));
+      }
+    });
   };
 
   sleep = async (timer) => await new Promise((res) => setTimeout(res, timer));

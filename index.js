@@ -36,22 +36,20 @@ app.listen(port, async () => {
 
     const puppeter = await Puppeter.init();
 
-    const promise2 = await processMatchingChangeBudget(
+    const promise1 = await processMatchingChangeBudget(
       NUMBER_SHEETS.SECOND_SHEET,
       doc,
       puppeter
     );
 
-    const promise3 = await processMatchingChangeBudget(
+    const promise2 = await processMatchingChangeBudget(
       NUMBER_SHEETS.THIRD_SHEET,
       doc,
       puppeter
     );
 
-    Promise.all([promise2, promise3]).catch((e) =>
-      console.log("Which promise with error", e)
-    );
+    await Promise.all([promise1, promise2]);
   } catch (error) {
-    console.log(error);
+    console.log("Error index", error);
   }
 });
