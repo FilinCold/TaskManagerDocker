@@ -114,7 +114,7 @@ const processMatchingChangeBudget = async (numberSheet = 0, doc, puppeter) => {
     // // проверяет предыдущие записанные матчи и изменяет бюджет ровно в 9:00 по МСК.
     // // 06:00 по серверу.
 
-    cron.schedule("30 * * * *", async () => {
+    cron.schedule("10 * * * *", async () => {
       console.log("running a task every day 30 minutes");
 
       const rows = await sheet.getRows(); // данные из гугл таблицы
