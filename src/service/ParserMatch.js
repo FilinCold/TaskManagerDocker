@@ -13,6 +13,7 @@ const {
   BOTH_WINNER_TABLE_3,
   FIRST_WINNER_TABLE_3,
   SECOND_WINNER_TABLE_3,
+  DEFAULT_COEFF,
 } = require("../constants");
 const { v4 } = require("uuid");
 const uuidv4 = v4;
@@ -141,7 +142,9 @@ class ParserMatch {
         continue;
       }
 
-      const convertCoeffInDot = String(secondCoeff);
+      const convertCoeffInDot = secondCoeff
+        ? String(secondCoeff)
+        : String(DEFAULT_COEFF);
       const win = winners[i];
       const url = urls[i];
       const match = {

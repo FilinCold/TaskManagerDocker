@@ -24,6 +24,8 @@ const NUMBER_SHEETS = {
   SECOND_SHEET: 1,
   THIRD_SHEET: 2,
 };
+const DEFAULT_COEFF = 1.0;
+
 module.exports = {
   SUMM_AMOUNT,
   SUMM_WIN_DEFAULT,
@@ -41,4 +43,5 @@ module.exports = {
   FIRST_WINNER_TABLE_3,
   SECOND_WINNER_TABLE_3,
   BOTH_WINNER_TABLE_3,
+  DEFAULT_COEFF,
 };
