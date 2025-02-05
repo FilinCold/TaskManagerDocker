@@ -229,6 +229,8 @@ class ParserMatch {
       let dataForListGoogleThird = defaultData;
       const isThirdGoogleTable = numberSheet === NUMBER_SHEETS.THIRD_SHEET;
 
+      await puppeter.pageClose();
+
       // изменяет данные coeff, winners в зависимости от 3 листа таблицы
       if (isThirdGoogleTable) {
         dataForListGoogleThird = await this.convertDataThirdListGoogle(
@@ -351,6 +353,7 @@ class ParserMatch {
     });
     // убираем появляющиеся баннеры добавляя в localStorage ключи
     await this.setLocalStorageForHideBanners(pageMainUrl);
+    await puppeter.pageClose();
 
     const arr = [];
 
