@@ -36,19 +36,39 @@ app.listen(port, async () => {
 
     const puppeter = await Puppeter.init();
 
-    const promise1 = await processMatchingChangeBudget(
-      NUMBER_SHEETS.SECOND_SHEET,
-      doc,
-      puppeter
-    );
+    cron.schedule("5 * * * *", async () => {
+      console.log("running a task every hour in 5 min");
+      await processMatchingChangeBudget(
+        NUMBER_SHEETS.SECOND_SHEET,
+        doc,
+        puppeter,
+        { isChangeBudget: true }
+      );
 
-    const promise2 = await processMatchingChangeBudget(
-      NUMBER_SHEETS.THIRD_SHEET,
-      doc,
-      puppeter
-    );
+      await processMatchingChangeBudget(
+        NUMBER_SHEETS.THIRD_SHEET,
+        doc,
+        puppeter,
+        { isChangeBudget: true }
+      );
+    });
 
-    await Promise.all([promise1, promise2]);
+    cron.schedule("10 * * * *", async () => {
+      console.log("running a task every hour in 10 min");
+      await processMatchingChangeBudget(
+        NUMBER_SHEETS.SECOND_SHEET,
+        doc,
+        puppeter,
+        { isAddMatches: true }
+      );
+
+      await processMatchingChangeBudget(
+        NUMBER_SHEETS.THIRD_SHEET,
+        doc,
+        puppeter,
+        { isAddMatches: true }
+      );
+    });
   } catch (error) {
     console.log("Error index", error);
   }
