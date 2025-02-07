@@ -35,6 +35,7 @@ app.listen(port, async () => {
     });
 
     const puppeter = await Puppeter.init();
+    console.log("Puppeteer init =========>", 99999999);
 
     cron.schedule("5 * * * *", async () => {
       console.log("running a task every hour in 5 min");
