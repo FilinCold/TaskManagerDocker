@@ -37,8 +37,10 @@ app.listen(port, async () => {
     const puppeter = await Puppeter.init();
     console.log("Puppeteer init =========>", 99999999);
 
-    cron.schedule("5 * * * *", async () => {
-      console.log("running a task every hour in 5 min");
+    // // проверяет предыдущие записанные матчи и изменяет бюджет ровно в 9:00 по МСК.
+    // // 06:00 по серверу.
+    cron.schedule("00 06 * * *", async () => {
+      console.log("running a task every day in 09:00 +3 hour by Moscow");
       await processMatchingChangeBudget(
         NUMBER_SHEETS.SECOND_SHEET,
         doc,
@@ -54,8 +56,10 @@ app.listen(port, async () => {
       );
     });
 
-    cron.schedule("10 * * * *", async () => {
-      console.log("running a task every hour in 10 min");
+    // // Добавляет в таблицу список матчей ровно в 14:00 по МСК. 11:00 по серверу.
+    // // Если в таблицу уже были добавлены, то не добавляет
+    cron.schedule("00 11 * * *", async () => {
+      console.log("running a task every day in 14:00 +3 hour by Moscow");
       await processMatchingChangeBudget(
         NUMBER_SHEETS.SECOND_SHEET,
         doc,
