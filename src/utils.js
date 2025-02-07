@@ -142,6 +142,7 @@ const addMatchesTable = async (sheet, puppeter, numberSheet) => {
   const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
   const actualMatches = await parserMatch.parseMatches(puppeter, numberSheet);
   addMatches(actualMatches, convertGoogleData, sheet);
+  await puppeter.pageClose();
 };
 
 const sleep = async (timer) =>
