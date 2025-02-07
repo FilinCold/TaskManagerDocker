@@ -91,6 +91,7 @@ const getYesterdayDate = () => {
 
 const filterByYesterdaysDate = (arr) => {
   const yesterday = getYesterdayDate(); // Получаем вчерашнюю дату
+
   return arr.filter((item) => {
     const dateArr = item.date?.split("."); // преобразуем строку в массив ДДММГГ
     dateArr.pop(); // и удаляем год
@@ -100,53 +101,80 @@ const filterByYesterdaysDate = (arr) => {
   });
 };
 
+const changeBudgetTable = async (sheet, puppeter, numberSheet) => {
+  console.log("numberSheet change budget =====>", numberSheet);
+
+  const rows = await sheet.getRows(); // данные из гугл таблицы
+  const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
+  const yesterdayMatches = filterByYesterdaysDate(convertGoogleData);
+
+  if (!yesterdayMatches.length) {
+    console.log("Budget don't changes");
+    return;
+  }
+
+  const valuesChangeBudget = await parserMatch.parseResMatchesCompleted(
+    yesterdayMatches,
+    sheet,
+    numberSheet, // нужно для сравнения на каком листе таблицы мы находимся
+    puppeter
+  );
+  console.log("valuesChangeBudget", valuesChangeBudget, 33333333);
+
+  const budget = sheet.getCell(0, COORDS_BUDGET_ROW); // получаем бюджет
+  const budgetValue = budget?.value ? Number(budget?.value) : 0;
+
+  const newValue = valuesChangeBudget?.reduce((prevVal, curVal) => {
+    prevVal += curVal;
+
+    return prevVal;
+  }, budgetValue);
+
+  budget.value = String(newValue); // change value budget
+  await sheet.saveUpdatedCells();
+  console.log("Budget was changed, completed matches were removed");
+};
+
+const addMatchesTable = async (sheet, puppeter, numberSheet) => {
+  console.log("numberSheet addMatches =====>", numberSheet);
+
+  const rows = await sheet.getRows(); // данные из гугл таблицы
+  const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
+  const actualMatches = await parserMatch.parseMatches(puppeter, numberSheet);
+  addMatches(actualMatches, convertGoogleData, sheet);
+};
+
 const sleep = async (timer) =>
   await new Promise((res) => setTimeout(res, timer));
 
-const processMatchingChangeBudget = async (numberSheet = 0, doc, puppeter) => {
+const processMatchingChangeBudget = async (
+  numberSheet = 0,
+  doc,
+  puppeter,
+  { isChangeBudget = false, isAddMatches = false }
+) => {
   try {
+    console.log(
+      "isChangeBudget====>",
+      isChangeBudget,
+      "isAddMatches=====>",
+      isAddMatches
+    );
+
     const sheet = doc.sheetsByIndex[numberSheet];
-    console.log(111111);
     const { lastColumnLetter, rowCount } = sheet;
     await sheet.loadCells(`A1:${lastColumnLetter}${rowCount}`);
 
+    if (isChangeBudget) {
+      await changeBudgetTable(sheet, puppeter, numberSheet);
+    }
+
+    if (isAddMatches) {
+      await addMatchesTable(sheet, puppeter, numberSheet);
+    }
     // every 30 minutes 30 * * * *
     // // проверяет предыдущие записанные матчи и изменяет бюджет ровно в 9:00 по МСК.
     // // 06:00 по серверу.
-
-    cron.schedule("10 * * * *", async () => {
-      console.log("running a task every day 30 minutes");
-
-      const rows = await sheet.getRows(); // данные из гугл таблицы
-      const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
-      const yesterdayMatches = filterByYesterdaysDate(convertGoogleData);
-
-      if (!yesterdayMatches.length) {
-        console.log("Budget don't changes");
-        return;
-      }
-
-      const valuesChangeBudget = await parserMatch.parseResMatchesCompleted(
-        yesterdayMatches,
-        sheet,
-        numberSheet, // нужно для сравнения на каком листе таблицы мы находимся
-        puppeter
-      );
-      console.log("valuesChangeBudget", valuesChangeBudget, 33333333);
-
-      const budget = sheet.getCell(0, COORDS_BUDGET_ROW); // получаем бюджет
-      const budgetValue = budget?.value ? Number(budget?.value) : 0;
-
-      const newValue = valuesChangeBudget?.reduce((prevVal, curVal) => {
-        prevVal += curVal;
-
-        return prevVal;
-      }, budgetValue);
-
-      budget.value = String(newValue); // change value budget
-      await sheet.saveUpdatedCells();
-      console.log("Budget was changed, completed matches were removed");
-    });
 
     // cron.schedule("00 06 * * *", async () => {
     //   console.log("running a task every day in 09:00 +3 hour by Moscow");
