@@ -212,6 +212,7 @@ class ParserMatch {
         );
       });
 
+      await puppeter.pageClose();
       const urlMatches = this.concatUrl(rawUrlMatches);
       const dateMatchesChunk = this.convertStrWordDate(
         this.makeChunks(rawDateMatches)
@@ -243,7 +244,6 @@ class ParserMatch {
         ...dataForListGoogleThird,
       };
 
-      await puppeter.pageClose();
       // isThirdGoogleTable - если 3 таблица, то пушим значения низких кэфов
       return this.createCovertMatchesForecast(dataMatches, isThirdGoogleTable); // [{ time: '', date: '', }, ...]
     } catch (error) {
@@ -347,6 +347,7 @@ class ParserMatch {
     // Заходим на основную страницу и добавляем в localStorage необходимые ключи
     // для скрытия банеров
     const pageMainUrl = await puppeter.createPage();
+
     await pageMainUrl?.goto?.(MAIN_URL_FOTTBALL, {
       waitUntil: "domcontentloaded",
     });
@@ -389,6 +390,7 @@ class ParserMatch {
         );
 
         arr.push(res);
+        await puppeter.pageClose();
       }
 
       return arr;
