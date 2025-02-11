@@ -14,8 +14,10 @@ const {
   FIRST_WINNER_TABLE_3,
   SECOND_WINNER_TABLE_3,
   DEFAULT_COEFF,
+  LENGTH_ARR_COEFF,
 } = require("../constants");
 const { v4 } = require("uuid");
+const { isCheckString } = require("../utils");
 const uuidv4 = v4;
 class ParserMatch {
   constructor() {}
@@ -134,11 +136,16 @@ class ParserMatch {
     for (let i = 0; i < urls.length; i++) {
       const [timeMatch, dateMatch] = dates[i];
       const [firstCommand, secondCommand] = commands[i];
-      const [_, secondCoeff] = coeff[i];
-      console.log(coeff, 43343434);
+      const secondCoeff =
+        coeff[i].length === LENGTH_ARR_COEFF ? coeff[i][1] : coeff[i][0];
+      // проверяет, если не смогли спарсить матч по названиям команд
+      // и коэффициентам
+      const isNoParseMatch =
+        isCheckString(firstCommand) ||
+        isCheckString(secondCommand) ||
+        isCheckString(secondCoeff);
 
-      // не добавляем элемент с кэфф меньше 1.3
-      if (secondCoeff < LOWER_COEFF_THRESHOLD && !isThirdGoogleTable) {
+      if (isNoParseMatch) {
         continue;
       }
 
