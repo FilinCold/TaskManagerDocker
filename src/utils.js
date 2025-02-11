@@ -21,18 +21,6 @@ const getMatchesWhichAdd = (actualMatches, googleMatches) => {
   }
 };
 
-const isCheckString = (str) => {
-  // проверяет, что значение не может быть
-  // пустой строкой, undefined, null
-  const regex = /^(?:string|undefined|null|)$/i;
-
-  if (regex.test(str)) {
-    return true;
-  }
-
-  return false;
-};
-
 const addMatches = async (actualMatches, googleMatches, googleSheet) => {
   // для теста условие, чтобы мок данные добавлять и проверять пустую таблицу
   // if (!googleMatches[0]?.["time"]) {
@@ -248,5 +236,4 @@ module.exports = {
   filterByYesterdaysDate,
   addMatches,
   processMatchingChangeBudget,
-  isCheckString,
 };
