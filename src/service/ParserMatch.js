@@ -17,7 +17,6 @@ const {
   LENGTH_ARR_COEFF,
 } = require("../constants");
 const { v4 } = require("uuid");
-const { isCheckString } = require("../utils");
 const uuidv4 = v4;
 class ParserMatch {
   constructor() {}
@@ -141,9 +140,9 @@ class ParserMatch {
       // проверяет, если не смогли спарсить матч по названиям команд
       // и коэффициентам
       const isNoParseMatch =
-        isCheckString(firstCommand) ||
-        isCheckString(secondCommand) ||
-        isCheckString(secondCoeff);
+        this.isCheckString(firstCommand) ||
+        this.isCheckString(secondCommand) ||
+        this.isCheckString(secondCoeff);
 
       if (isNoParseMatch) {
         continue;
@@ -522,6 +521,18 @@ class ParserMatch {
   };
 
   sleep = async (timer) => await new Promise((res) => setTimeout(res, timer));
+
+  isCheckString = (str) => {
+    // проверяет, что значение не может быть
+    // пустой строкой, undefined, null
+    const regex = /^(?:string|undefined|null|)$/i;
+
+    if (regex.test(str)) {
+      return true;
+    }
+
+    return false;
+  };
 }
 
 const parserMatch = new ParserMatch();
