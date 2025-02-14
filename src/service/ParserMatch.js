@@ -15,6 +15,7 @@ const {
   SECOND_WINNER_TABLE_3,
   DEFAULT_COEFF,
   LENGTH_ARR_COEFF,
+  MAIN_URL_TENNIS,
 } = require("../constants");
 const { v4 } = require("uuid");
 const uuidv4 = v4;
@@ -173,15 +174,36 @@ class ParserMatch {
   };
 
   parseMatches = async (puppeter, numberSheet) => {
+    const isFourthSheet = numberSheet === NUMBER_SHEETS.FOURTH_SHEET;
+
     try {
       const page = await puppeter?.createPage();
 
-      await page?.goto?.(MAIN_URL_FOTTBALL, {
+      const urlMain = isFourthSheet ? MAIN_URL_TENNIS : MAIN_URL_FOTTBALL;
+      await page?.goto?.(urlMain, {
         waitUntil: "domcontentloaded",
       });
 
       // убираем появляющиеся баннеры добавляя в localStorage ключи
       await this.setLocalStorageForHideBanners(page);
+
+      if (isFourthSheet) {
+        await page.waitForSelector(
+          "#__next > div.ui.container.main-container > div > div.eleven.wide.column > div > div.sc-eb5b899e-0.jCgQRP > div.sc-5dc72472-2.fTTXWi > div.sc-5dc72472-0.gRPtQc.latest-matches > div:nth-child(2) > select"
+        );
+        const buttonClickSelect = await page.$(
+          "#__next > div.ui.container.main-container > div > div.eleven.wide.column > div > div.sc-eb5b899e-0.jCgQRP > div.sc-5dc72472-2.fTTXWi > div.sc-5dc72472-0.gRPtQc.latest-matches > div:nth-child(2) > select"
+        );
+
+        await buttonClickSelect.click();
+
+        await page.select(
+          "#__next > div.ui.container.main-container > div > div.eleven.wide.column > div > div.sc-eb5b899e-0.jCgQRP > div.sc-5dc72472-2.fTTXWi > div.sc-5dc72472-0.gRPtQc.latest-matches > div:nth-child(2) > select",
+          "12" // interval 12 hours get matches
+        );
+      }
+
+      await this.sleep(1500);
 
       const rawUrlMatches = await page?.evaluate?.(() => {
         return Array.from(

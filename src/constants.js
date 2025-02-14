@@ -1,6 +1,7 @@
 const SUMM_AMOUNT = 500;
 const SUMM_WIN_DEFAULT = 0;
 const MAIN_URL_FOTTBALL = "https://nb-bet.com/";
+const MAIN_URL_TENNIS = "https://nb-bet.com/tennis/odds-scanner";
 const ID_TABLE = "1z-rm8dtMZ2TY2yLXkjt4W108trsHqUwX-CSKV-feAgU";
 const FIRST_WINNER = "П1";
 const SECOND_WINNER = "П2";
@@ -23,6 +24,7 @@ const NUMBER_SHEETS = {
   FIRST_SHEET: 0,
   SECOND_SHEET: 1,
   THIRD_SHEET: 2,
+  FOURTH_SHEET: 3,
 };
 const DEFAULT_COEFF = 1.0;
 const LENGTH_ARR_COEFF = 2;
@@ -46,4 +48,5 @@ module.exports = {
   BOTH_WINNER_TABLE_3,
   DEFAULT_COEFF,
   LENGTH_ARR_COEFF,
+  MAIN_URL_TENNIS,
 };
