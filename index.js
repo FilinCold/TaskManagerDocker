@@ -54,6 +54,13 @@ app.listen(port, async () => {
         puppeter,
         { isChangeBudget: true }
       );
+
+      await processMatchingChangeBudget(
+        NUMBER_SHEETS.FOURTH_SHEET,
+        doc,
+        puppeter,
+        { isChangeBudget: true }
+      );
     });
 
     // // Добавляет в таблицу список матчей ровно в 14:00 по МСК. 11:00 по серверу.
@@ -69,6 +76,13 @@ app.listen(port, async () => {
 
       await processMatchingChangeBudget(
         NUMBER_SHEETS.THIRD_SHEET,
+        doc,
+        puppeter,
+        { isAddMatches: true }
+      );
+
+      await processMatchingChangeBudget(
+        NUMBER_SHEETS.FOURTH_SHEET,
         doc,
         puppeter,
         { isAddMatches: true }
