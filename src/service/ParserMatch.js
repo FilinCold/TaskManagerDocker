@@ -457,7 +457,10 @@ class ParserMatch {
     const isSecondWinner = firstCommand < secondCommand;
 
     // проверяем, что первый лист
-    if (numberSheet === NUMBER_SHEETS.FIRST_SHEET) {
+    if (
+      numberSheet === NUMBER_SHEETS.FIRST_SHEET ||
+      numberSheet === NUMBER_SHEETS.FOURTH_SHEET
+    ) {
       if (isBothWinner) {
         winCommand = BOTH_WINNER;
         colorCellMatchCheck.backgroundColor = COLORS_CELL.RED;
