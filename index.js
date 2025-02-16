@@ -37,12 +37,6 @@ app.listen(port, async () => {
     const puppeter = await Puppeter.init();
     console.log("Puppeteer init =========>", 99999999);
 
-    await processMatchingChangeBudget(
-      NUMBER_SHEETS.FOURTH_SHEET,
-      doc,
-      puppeter,
-      { isChangeBudget: true }
-    );
     // // проверяет предыдущие записанные матчи и изменяет бюджет ровно в 9:00 по МСК.
     // // 06:00 по серверу.
     cron.schedule("00 06 * * *", async () => {
