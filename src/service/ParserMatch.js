@@ -149,6 +149,11 @@ class ParserMatch {
         continue;
       }
 
+      // не добавляем элемент с кэфф меньше 1.3
+      if (secondCoeff < LOWER_COEFF_THRESHOLD || isThirdGoogleTable) {
+        continue;
+      }
+
       const convertCoeffInDot = secondCoeff
         ? String(secondCoeff)
         : String(DEFAULT_COEFF);
@@ -203,7 +208,7 @@ class ParserMatch {
         );
       }
 
-      await this.sleep(1500);
+      await this.sleep(3000);
 
       const rawUrlMatches = await page?.evaluate?.(() => {
         return Array.from(
