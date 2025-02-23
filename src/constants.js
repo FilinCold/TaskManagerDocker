@@ -1,4 +1,4 @@
-const SUMM_AMOUNT = 500;
+const SUMM_AMOUNT = 1000;
 const SUMM_WIN_DEFAULT = 0;
 const MAIN_URL_FOTTBALL = "https://nb-bet.com/";
 const MAIN_URL_TENNIS = "https://nb-bet.com/tennis/odds-scanner";

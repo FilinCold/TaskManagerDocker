@@ -150,7 +150,7 @@ class ParserMatch {
       }
 
       // не добавляем элемент с кэфф меньше 1.3
-      if (secondCoeff < LOWER_COEFF_THRESHOLD || isThirdGoogleTable) {
+      if (secondCoeff < LOWER_COEFF_THRESHOLD && !isThirdGoogleTable) {
         continue;
       }
 
@@ -194,16 +194,16 @@ class ParserMatch {
 
       if (isFourthSheet) {
         await page.waitForSelector(
-          "#__next > div.ui.container.main-container > div > div.eleven.wide.column > div > div.sc-eb5b899e-0.jCgQRP > div.sc-5dc72472-2.fTTXWi > div.sc-5dc72472-0.gRPtQc.latest-matches > div:nth-child(2) > select"
+          "#__next > div.ui.container.main-container > div > div.eleven.wide.column > div > div.sc-23d37354-0.bRtjmr > div.sc-d7c2ec8-2.dHJrlm > div.sc-d7c2ec8-0.beuQtE.latest-matches > div:nth-child(2) > select"
         );
         const buttonClickSelect = await page.$(
-          "#__next > div.ui.container.main-container > div > div.eleven.wide.column > div > div.sc-eb5b899e-0.jCgQRP > div.sc-5dc72472-2.fTTXWi > div.sc-5dc72472-0.gRPtQc.latest-matches > div:nth-child(2) > select"
+          "#__next > div.ui.container.main-container > div > div.eleven.wide.column > div > div.sc-23d37354-0.bRtjmr > div.sc-d7c2ec8-2.dHJrlm > div.sc-d7c2ec8-0.beuQtE.latest-matches > div:nth-child(2) > select"
         );
 
         await buttonClickSelect.click();
 
         await page.select(
-          "#__next > div.ui.container.main-container > div > div.eleven.wide.column > div > div.sc-eb5b899e-0.jCgQRP > div.sc-5dc72472-2.fTTXWi > div.sc-5dc72472-0.gRPtQc.latest-matches > div:nth-child(2) > select",
+          "#__next > div.ui.container.main-container > div > div.eleven.wide.column > div > div.sc-23d37354-0.bRtjmr > div.sc-d7c2ec8-2.dHJrlm > div.sc-d7c2ec8-0.beuQtE.latest-matches > div:nth-child(2) > select",
           "12" // interval 12 hours get matches
         );
       }
@@ -212,35 +212,35 @@ class ParserMatch {
 
       const rawUrlMatches = await page?.evaluate?.(() => {
         return Array.from(
-          document.querySelectorAll("div.sc-c7273f60-6 > a[href]"),
+          document.querySelectorAll("div.sc-da821db2-6 > a[href]"),
           (a) => a.getAttribute("href")
         );
       });
 
       const rawDateMatches = await page?.evaluate?.(() => {
         return Array.from(
-          document.querySelectorAll("div.sc-c7273f60-0 > div"),
+          document.querySelectorAll("div.sc-da821db2-0 > div"),
           (a) => a.innerHTML
         );
       });
 
       const rawCommandMatches = await page?.evaluate?.(() => {
         return Array.from(
-          document.querySelectorAll("div.sc-c7273f60-3 > div"),
+          document.querySelectorAll("div.sc-da821db2-3 > div"),
           (a) => a.innerHTML
         );
       });
 
       const rawCoeffMatches = await page?.evaluate?.(() => {
         return Array.from(
-          document.querySelectorAll("div.sc-d83ff2c2-0 > span:nth-child(1)"),
+          document.querySelectorAll("div.sc-479cd3f2-0 > span:nth-child(1)"),
           (a) => a.innerHTML
         );
       });
 
       const rawWinnerMatches = await page?.evaluate?.(() => {
         return Array.from(
-          document.querySelectorAll("div.sc-d83ff2c2-1 > div:nth-child(1)"),
+          document.querySelectorAll("div.sc-479cd3f2-1 > div:nth-child(1)"),
           (a) => a.innerHTML
         );
       });
@@ -255,6 +255,8 @@ class ParserMatch {
       const coeffMatches = this.clearSomeSymbolRegex(rawCoeffMatches);
 
       const defaultData = {
+        dates: dateMatches,
+        commands: commandMatches,
         urls: urlMatches,
         coeff: coeffMatches,
         winners: rawWinnerMatches,
@@ -272,8 +274,6 @@ class ParserMatch {
       }
 
       const dataMatches = {
-        dates: dateMatches,
-        commands: commandMatches,
         ...dataForListGoogleThird,
       };
 
@@ -286,15 +286,20 @@ class ParserMatch {
 
   async convertDataThirdListGoogle(
     puppeter,
-    data = { urls: [], coeff: [], winners: [] } // default value
+    data = { urls: [], coeff: [], winners: [], dates: [], commands: [] } // default value
   ) {
-    const { urls, coeff, winners } = data;
+    const { urls, coeff, winners, dates, commands } = data;
+    let urlClear = [...urls],
+      coeffClear = [...coeff],
+      winnersClear = [...winners],
+      datesClear = [...dates],
+      commandsClear = [...commands];
 
     try {
-      for (let i = 0; i < urls.length; i++) {
+      for (let i = 0; i < urlClear.length; i++) {
         const page = await puppeter.createPage();
 
-        await page?.goto?.(urls[i], {
+        await page?.goto?.(urlClear[i], {
           waitUntil: "domcontentloaded",
         });
 
@@ -309,15 +314,15 @@ class ParserMatch {
           await button.click();
         }
 
-        await page.waitForSelector("div.sc-51b5fb96-24");
+        await page.waitForSelector("div.sc-57cb9113-24");
         const rawCoeff = await page?.evaluate?.(() => {
           // '<span class="sc-51b5fb96-2 bmbyaV">1X</span>1.043' находит строку с кэф.
           return Array.from(
             // обращаемся к значению 1,
             // чтобы из массива всех статистик получить нужный нам
             document
-              ?.querySelectorAll("div.sc-51b5fb96-24")[1]
-              ?.querySelectorAll("div.sc-51b5fb96-1.iUZZTC"),
+              ?.querySelectorAll("div.sc-57cb9113-24")[1]
+              ?.querySelectorAll("div.sc-57cb9113-1"),
             (div) => div.innerHTML
           );
         });
@@ -325,23 +330,45 @@ class ParserMatch {
         const [firstCoeffWin, secondCoeffWin] =
           this.getCoeffForDetailInfo(rawCoeff);
         const [firstWinSymbol, firstCoeff] = firstCoeffWin;
-        const [secondWinSymbol, secondCoeff] = secondCoeffWin;
+        const [secondWinSymbol, secondCoeff] = secondCoeffWin
+          ? secondCoeffWin
+          : ["SYMBOL", "0"];
 
         const isFirstWinner = winners[i] === FIRST_WINNER;
+        const winner = isFirstWinner ? firstWinSymbol : secondWinSymbol;
+
+        if (winner === "SYMBOL") {
+          // очищаем из массива элементы, которые содержат значение symbol
+          urlClear = urlClear.filter((_, index) => index !== i);
+          coeffClear = coeffClear.filter((_, index) => index !== i);
+          winnersClear = winnersClear.filter((_, index) => index !== i);
+          datesClear = datesClear.filter((_, index) => index !== i);
+          commandsClear = commandsClear.filter((_, index) => index !== i);
+
+          continue;
+        }
         // переопределяем значение победителя на x1 || x2
-        winners[i] = isFirstWinner ? firstWinSymbol : secondWinSymbol;
+        winnersClear[i] = winner;
+        //добавил условие, что у какого-то матча может не спарсится двойной шанс
+
         // удаляем последний элемент, чтобы поместить в массив обновленный кэфф
-        coeff[i].pop();
+        coeffClear[i].pop();
         const elementCoeff = isFirstWinner
           ? Number(firstCoeff)
           : Number(secondCoeff);
-        coeff[i].push(elementCoeff);
+        coeffClear[i].push(elementCoeff);
 
-        console.log("Parse page complete ======>", urls[i]);
+        console.log("Parse page complete ======>", urlClear[i]);
         await puppeter.pageClose();
       }
 
-      return { urls, coeff, winners };
+      return {
+        dates: datesClear,
+        commands: commandsClear,
+        urls: urlClear,
+        coeff: coeffClear,
+        winners: winnersClear,
+      };
     } catch (error) {
       console.log("Error parse link", error);
     }
