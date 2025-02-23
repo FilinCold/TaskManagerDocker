@@ -173,57 +173,6 @@ const processMatchingChangeBudget = async (
     if (isAddMatches) {
       await addMatchesTable(sheet, puppeter, numberSheet);
     }
-    // every 30 minutes 30 * * * *
-    // // проверяет предыдущие записанные матчи и изменяет бюджет ровно в 9:00 по МСК.
-    // // 06:00 по серверу.
-
-    // cron.schedule("00 06 * * *", async () => {
-    //   console.log("running a task every day in 09:00 +3 hour by Moscow");
-
-    //   const rows = await sheet.getRows(); // данные из гугл таблицы
-    //   const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
-    //   const yesterdayMatches = filterByYesterdaysDate(convertGoogleData);
-
-    //   if (!yesterdayMatches.length) {
-    //     console.log("Budget don't changes");
-    //     return;
-    //   }
-
-    //   const valuesChangeBudget = await parserMatch.parseResMatchesCompleted(
-    //     yesterdayMatches,
-    //     sheet,
-    //     numberSheet, // нужно для сравнения на каком листе таблицы мы находимся
-    //     puppeter
-    //   );
-    //   console.log("valuesChangeBudget", valuesChangeBudget, 33333333);
-
-    //   const budget = sheet.getCell(0, COORDS_BUDGET_ROW); // получаем бюджет
-    //   const budgetValue = budget?.value ? Number(budget?.value) : 0;
-
-    //   const newValue = valuesChangeBudget?.reduce((prevVal, curVal) => {
-    //     prevVal += curVal;
-
-    //     return prevVal;
-    //   }, budgetValue);
-
-    //   budget.value = String(newValue); // change value budget
-    //   await sheet.saveUpdatedCells();
-    //   console.log("Budget was changed, completed matches were removed");
-    // });
-
-    // // Добавляет в таблицу список матчей ровно в 14:00 по МСК. 11:00 по серверу.
-    // // Если в таблицу уже были добавлены, то не добавляет
-    // cron.schedule("00 11 * * *", async () => {
-    //   console.log("running a task every day in 14:00 +3 hour by Moscow");
-
-    //   const rows = await sheet.getRows(); // данные из гугл таблицы
-    //   const convertGoogleData = parserMatch.convertGoogleRows(rows); // преобразовываем данные в читаемый вид
-    //   const actualMatches = await parserMatch.parseMatches(
-    //     puppeter,
-    //     numberSheet
-    //   );
-    //   addMatches(actualMatches, convertGoogleData, sheet);
-    // });
   } catch (error) {
     console.log("Error", error);
   }
