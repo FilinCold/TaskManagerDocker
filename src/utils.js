@@ -123,6 +123,7 @@ const changeBudgetTable = async (sheet, puppeter, numberSheet) => {
 
   const budget = sheet.getCell(0, COORDS_BUDGET_ROW); // получаем бюджет
   const budgetValue = budget?.value ? Number(budget?.value) : 0;
+  console.log("budgetValue google", budgetValue, 888888);
 
   const newValue = valuesChangeBudget?.reduce((prevVal, curVal) => {
     prevVal += curVal;
