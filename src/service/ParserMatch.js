@@ -420,6 +420,7 @@ class ParserMatch {
     try {
       for (let i = 0; i < completedMatches.length; i++) {
         const page = await puppeter.createPage();
+        const isFourthSheet = numberSheet === NUMBER_SHEETS.FOURTH_SHEET;
 
         await page?.goto?.(completedMatches[i]?.link, {
           waitUntil: "domcontentloaded",
@@ -427,14 +428,31 @@ class ParserMatch {
 
         await this.sleep(1000);
 
-        const rawCheck = await page?.evaluate?.(() => {
-          return Array.from(
-            document.querySelectorAll(
-              "#__next > div.ui.container.main-container > div.ui.stackable.equal.width.grid > div.eleven.wide.column > div > div.sc-8401a795-1.iBALIp > div.sc-8401a795-5.cRbFpH > div.sc-8401a795-9.jlDaCk > div.sc-8401a795-11.dclGPc > div"
-            ),
-            (div) => div.innerHTML
-          );
-        });
+        let rawCheck = null;
+
+        if (isFourthSheet) {
+          // такое условие, потому что нельзя вынести в переменную и использовать внутри, т.к. обращения мы делаем в консоли
+          // и консоль ничего не знает, что у нас из вне
+          rawCheck = await page?.evaluate?.(() => {
+            return Array.from(
+              document.querySelectorAll(
+                "#__next > div.ui.container.main-container > div.ui.stackable.equal.width.grid > div.eleven.wide.column > div > div.sc-8401a795-1.iBALIp > div.sc-8401a795-5.cRbFpH > div.sc-8401a795-9.jenvbW > div.sc-8401a795-11.dcpICH > div"
+              ),
+              (div) => div.innerHTML
+            );
+          });
+        }
+
+        if (!isFourthSheet) {
+          rawCheck = await page?.evaluate?.(() => {
+            return Array.from(
+              document.querySelectorAll(
+                "#__next > div.ui.container.main-container > div.ui.stackable.equal.width.grid > div.eleven.wide.column > div > div.sc-8401a795-1.iBALIp > div.sc-8401a795-5.cRbFpH > div.sc-8401a795-9.jlDaCk > div.sc-8401a795-11.dclGPc > div"
+              ),
+              (div) => div.innerHTML
+            );
+          });
+        }
 
         const res = await this.matchesCompletedDependencyListGoogleTable(
           completedMatches[i],
