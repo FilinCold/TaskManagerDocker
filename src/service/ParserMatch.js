@@ -429,7 +429,9 @@ class ParserMatch {
 
         const rawCheck = await page?.evaluate?.(() => {
           return Array.from(
-            document.querySelectorAll("div.sc-1bcc6d0c-11 > div"),
+            document.querySelectorAll(
+              "#__next > div.ui.container.main-container > div.ui.stackable.equal.width.grid > div.eleven.wide.column > div > div.sc-8401a795-1.iBALIp > div.sc-8401a795-5.cRbFpH > div.sc-8401a795-9.jlDaCk > div.sc-8401a795-11.dclGPc > div"
+            ),
             (div) => div.innerHTML
           );
         });
